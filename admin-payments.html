@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - iBlue Uganda</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .login-header h1 {
+            color: #2563EB;
+            margin-bottom: 10px;
+        }
+        
+        .login-header p {
+            color: #6B7280;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 500;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px 24px;
+            background: #2563EB;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        button:hover {
+            background: #1D4ED8;
+        }
+        
+        .error-message {
+            background: #FEE2E2;
+            color: #991B1B;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #E5E7EB;
+            border-top-color: #2563EB;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>iBlue Uganda</h1>
+            <p>Admin Dashboard Login</p>
+        </div>
+        
+        <div class="error-message" id="errorMessage"></div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" placeholder="admin@iblue.ug" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+            
+            <button type="submit" id="loginButton">
+                <span id="buttonText">Sign In</span>
+            </button>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://uufhvmmgwzkxvvdbqemz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1Zmh2bW1nd3preHZ2ZGJxZW16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMDIzNTYsImV4cCI6MjA4NTg3ODM1Nn0.WABHx4ilFRkhPHP-y4ZC4E8Kb7PRqY-cyxI8cVS8Tyc';
+        
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Clear any existing sessions on page load
+        async function clearExistingSession() {
+            try {
+                await sb.auth.signOut();
+            } catch (error) {
+                console.log('No session to clear');
+            }
+            
+            // Clear all Supabase storage
+            const projectRef = 'uufhvmmgwzkxvvdbqemz';
+            Object.keys(localStorage).forEach(key => {
+                if (key.includes(projectRef) || key.includes('supabase') || key.includes('sb-')) {
+                    localStorage.removeItem(key);
+                }
+            });
+        }
+        
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('errorMessage');
+            const loginButton = document.getElementById('loginButton');
+            const buttonText = document.getElementById('buttonText');
+            
+            try {
+                // Show loading state
+                loginButton.disabled = true;
+                buttonText.innerHTML = '<span class="loading"></span> Signing in...';
+                errorDiv.style.display = 'none';
+                
+                // Clear any existing session first
+                await clearExistingSession();
+                
+                // Attempt login
+                const { data, error } = await sb.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) throw error;
+                
+                if (!data.user) {
+                    throw new Error('No user data received');
+                }
+                
+                // Check if user is admin
+                const { data: profile, error: profileError } = await sb
+                    .from('profiles')
+                    .select('is_admin, admin_role, full_name')
+                    .eq('id', data.user.id)
+                    .single();
+                
+                if (profileError) {
+                    await sb.auth.signOut();
+                    throw new Error('Unable to verify admin status');
+                }
+                
+                if (!profile || !profile.is_admin) {
+                    await sb.auth.signOut();
+                    throw new Error('Access denied. Admin only.');
+                }
+                
+                // Success - redirect to dashboard
+                window.location.href = 'admin-dashboard.html';
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                errorDiv.textContent = error.message || 'Invalid email or password';
+                errorDiv.style.display = 'block';
+                
+                // Reset button
+                loginButton.disabled = false;
+                buttonText.innerHTML = 'Sign In';
+                
+                // Clear any partial session
+                await clearExistingSession();
+            }
+        });
+        
+        // Clear session on page load
+        clearExistingSession();
+    </script>
+</body>
+</html>

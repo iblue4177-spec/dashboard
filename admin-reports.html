@@ -1,0 +1,2089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Admin Dashboard – iBlue Uganda</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    /* ===== MOBILE-FIRST RESET ===== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    html {
+      font-size: 16px;
+      height: -webkit-fill-available;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      line-height: 1.5;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+    }
+
+    /* ===== COLOR VARIABLES ===== */
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #dbeafe;
+      --secondary: #64748b;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      
+      --bg-white: #ffffff;
+      --bg-light: #f8fafc;
+      --bg-gray: #f1f5f9;
+      --bg-dark: #0f172a;
+      
+      --border: #e2e8f0;
+      --border-dark: #cbd5e1;
+      
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --text-light: #94a3b8;
+      
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      
+      --radius-sm: 8px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+      
+      --spacing-xs: 0.25rem;
+      --spacing-sm: 0.5rem;
+      --spacing: 0.75rem;
+      --spacing-md: 1rem;
+      --spacing-lg: 1.25rem;
+      --spacing-xl: 1.5rem;
+      --spacing-2xl: 2rem;
+    }
+
+    /* ===== SAFE AREA INSETS ===== */
+    @supports (padding: max(0px)) {
+      .safe-top {
+        padding-top: max(0.75rem, env(safe-area-inset-top));
+      }
+      .safe-bottom {
+        padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+      }
+    }
+
+    /* ===== ADMIN LAYOUT ===== */
+    .admin-app {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ===== HEADER ===== */
+    .admin-header {
+      background: var(--bg-white);
+      border-bottom: 1px solid var(--border);
+      padding: var(--spacing) var(--spacing-md);
+      padding-top: env(safe-area-inset-top);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: 70px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .admin-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+
+    .logo-text {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+    }
+
+    .admin-badge {
+      background: var(--bg-gray);
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-left: var(--spacing-sm);
+    }
+
+    .admin-header-title {
+      flex: 1;
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .admin-header-actions {
+      display: flex;
+      gap: var(--spacing-sm);
+    }
+
+    .admin-icon-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: var(--bg-light);
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .admin-icon-btn:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+      transform: scale(0.95);
+    }
+
+    .admin-icon-btn i {
+      font-size: 1.125rem;
+    }
+
+    .notification-dot {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 8px;
+      height: 8px;
+      background: var(--danger);
+      border-radius: 50%;
+      border: 2px solid var(--bg-white);
+    }
+
+    /* ===== SIDEBAR (Desktop) ===== */
+    .admin-sidebar {
+      display: none;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .admin-main {
+      flex: 1;
+      padding: var(--spacing-md);
+    }
+
+    /* ===== STATS CARDS ===== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--spacing-md);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .stat-card {
+      background: var(--bg-white);
+      border-radius: var(--radius);
+      padding: var(--spacing-md);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+    }
+
+    .stat-header {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .stat-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .stat-icon.pending { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+    .stat-icon.reviewed { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+    .stat-icon.resolved { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+    .stat-icon.total { background: rgba(100, 116, 139, 0.1); color: var(--secondary); }
+
+    .stat-info {
+      flex: 1;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.2;
+    }
+
+    .stat-trend {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      margin-top: 4px;
+    }
+
+    /* ===== FILTER BAR ===== */
+    .filter-bar {
+      background: var(--bg-white);
+      border-radius: var(--radius);
+      padding: var(--spacing-md);
+      margin-bottom: var(--spacing-lg);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-md);
+      align-items: center;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 200px;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 16px 10px 40px;
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      font-size: 0.9rem;
+      color: var(--text-primary);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: var(--bg-white);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-light);
+    }
+
+    .filter-group {
+      display: flex;
+      gap: var(--spacing-sm);
+      flex-wrap: wrap;
+    }
+
+    .filter-select {
+      padding: 10px 32px 10px 16px;
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .date-range {
+      display: flex;
+      gap: var(--spacing-sm);
+      align-items: center;
+    }
+
+    .date-input {
+      padding: 10px 16px;
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      font-size: 0.9rem;
+      color: var(--text-primary);
+    }
+
+    /* ===== REPORTS TABLE ===== */
+    .reports-container {
+      background: var(--bg-white);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .reports-header {
+      display: none;
+    }
+
+    .reports-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .report-item {
+      padding: var(--spacing-md);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .report-item:active {
+      background: var(--bg-light);
+    }
+
+    .report-item:last-child {
+      border-bottom: none;
+    }
+
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .report-id {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-light);
+      font-family: monospace;
+    }
+
+    .report-badge {
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-pending { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+    .badge-reviewed { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+    .badge-resolved { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+    .badge-dismissed { background: rgba(100, 116, 139, 0.1); color: var(--secondary); }
+
+    .report-type {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: var(--bg-gray);
+      color: var(--text-secondary);
+      margin-left: var(--spacing-sm);
+    }
+
+    .report-content {
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .report-reason {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .report-description {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      line-height: 1.4;
+    }
+
+    .report-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-md);
+      font-size: 0.75rem;
+      color: var(--text-light);
+      margin-top: var(--spacing-sm);
+    }
+
+    .report-meta i {
+      margin-right: 4px;
+    }
+
+    .report-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: var(--spacing-sm);
+      padding-top: var(--spacing-sm);
+      border-top: 1px dashed var(--border);
+    }
+
+    .reporter-info {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: var(--spacing-sm);
+    }
+
+    .action-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+
+    .action-btn i {
+      font-size: 0.8rem;
+    }
+
+    .btn-review {
+      background: var(--info);
+      color: white;
+    }
+
+    .btn-resolve {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-dismiss {
+      background: var(--bg-gray);
+      color: var(--text-secondary);
+    }
+
+    /* ===== REPORT DETAIL MODAL ===== */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-md);
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg-white);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-header {
+      padding: var(--spacing-lg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: var(--bg-white);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+
+    .modal-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: var(--bg-light);
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      background: var(--danger);
+      color: white;
+    }
+
+    .modal-body {
+      padding: var(--spacing-lg);
+    }
+
+    .detail-section {
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .detail-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: var(--spacing-sm);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .detail-card {
+      background: var(--bg-light);
+      border-radius: var(--radius);
+      padding: var(--spacing-md);
+      border: 1px solid var(--border);
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: var(--spacing-sm) 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+
+    .detail-label {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    .detail-value {
+      color: var(--text-primary);
+      font-weight: 500;
+      font-size: 0.85rem;
+      text-align: right;
+    }
+
+    .admin-actions {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+      margin-top: var(--spacing-xl);
+    }
+
+    .admin-textarea {
+      width: 100%;
+      padding: var(--spacing-md);
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      resize: vertical;
+      min-height: 100px;
+      font-family: inherit;
+    }
+
+    .admin-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: var(--bg-white);
+    }
+
+    .action-group {
+      display: flex;
+      gap: var(--spacing-md);
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px 24px;
+      border: none;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-warning {
+      background: var(--warning);
+      color: white;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state {
+      text-align: center;
+      padding: var(--spacing-2xl);
+    }
+
+    .empty-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--bg-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--spacing-lg);
+      color: var(--text-light);
+      font-size: 2rem;
+    }
+
+    .empty-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .empty-message {
+      color: var(--text-secondary);
+      margin-bottom: var(--spacing-lg);
+    }
+
+    /* ===== LOADING ===== */
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-2xl);
+      gap: var(--spacing);
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--bg-gray);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ===== PAGINATION ===== */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-lg);
+      border-top: 1px solid var(--border);
+    }
+
+    .page-btn {
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--border);
+      background: var(--bg-white);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .page-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .page-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* ===== NOTIFICATION ===== */
+    .notification-toast {
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      left: 20px;
+      background: var(--primary);
+      color: white;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      z-index: 3000;
+      animation: slideIn 0.3s ease;
+      text-align: center;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes slideOut {
+      from { transform: translateY(0); opacity: 1; }
+      to { transform: translateY(-20px); opacity: 0; }
+    }
+
+    /* ===== RESPONSIVE (Tablet & Desktop) ===== */
+    @media (min-width: 768px) {
+      .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .reports-header {
+        display: grid;
+        grid-template-columns: 100px 120px 1fr 150px 180px 120px;
+        padding: var(--spacing-md);
+        background: var(--bg-light);
+        border-bottom: 1px solid var(--border);
+        font-weight: 600;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+      }
+
+      .report-item {
+        display: grid;
+        grid-template-columns: 100px 120px 1fr 150px 180px 120px;
+        align-items: center;
+        padding: var(--spacing-md);
+      }
+
+      .report-header {
+        display: contents;
+      }
+
+      .report-content {
+        display: contents;
+      }
+
+      .report-footer {
+        display: contents;
+      }
+
+      .report-meta {
+        margin-top: 0;
+      }
+
+      .action-buttons {
+        justify-content: flex-end;
+      }
+
+      .notification-toast {
+        max-width: 400px;
+        margin: 0 auto;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .admin-app {
+        flex-direction: row;
+      }
+
+      .admin-sidebar {
+        display: flex;
+        flex-direction: column;
+        width: 260px;
+        background: var(--bg-white);
+        border-right: 1px solid var(--border);
+        min-height: 100vh;
+        position: sticky;
+        top: 0;
+      }
+
+      .sidebar-header {
+        padding: var(--spacing-xl);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .sidebar-nav {
+        flex: 1;
+        padding: var(--spacing-lg);
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        padding: var(--spacing-md);
+        border-radius: var(--radius);
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: all 0.2s;
+        margin-bottom: 4px;
+      }
+
+      .nav-item:hover {
+        background: var(--bg-light);
+        color: var(--primary);
+      }
+
+      .nav-item.active {
+        background: var(--primary-light);
+        color: var(--primary);
+        font-weight: 600;
+      }
+
+      .nav-item i {
+        width: 20px;
+        text-align: center;
+      }
+
+      .admin-main {
+        flex: 1;
+        padding: var(--spacing-xl);
+      }
+
+      .admin-header {
+        display: none;
+      }
+    }
+
+    /* ===== DARK MODE ===== */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary: #3b82f6;
+        --primary-dark: #1d4ed8;
+        --primary-light: #1e3a8a;
+        
+        --bg-white: #0f172a;
+        --bg-light: #1e293b;
+        --bg-gray: #334155;
+        --bg-dark: #020617;
+        
+        --border: #334155;
+        --border-dark: #475569;
+        
+        --text-primary: #f1f5f9;
+        --text-secondary: #cbd5e1;
+        --text-light: #94a3b8;
+      }
+    }
+
+    /* ===== TOUCH OPTIMIZATIONS ===== */
+    @media (hover: none) and (pointer: coarse) {
+      .report-item,
+      .action-btn,
+      .page-btn,
+      .admin-icon-btn {
+        min-height: 44px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-app">
+    <!-- Desktop Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-header">
+        <a href="admin-dashboard.html" class="admin-logo">
+          <div class="logo-icon">iB</div>
+          <span class="logo-text">iBlue Admin</span>
+        </a>
+        <div class="admin-badge">Administrator</div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="admin-dashboard.html" class="nav-item active">
+          <i class="fas fa-flag"></i>
+          <span>Reports</span>
+          <span class="notification-dot" id="pendingReportsBadge" style="display: none;"></span>
+        </a>
+        <a href="admin-ads.html" class="nav-item">
+          <i class="fas fa-bullhorn"></i>
+          <span>Ads</span>
+        </a>
+        <a href="admin-users.html" class="nav-item">
+          <i class="fas fa-users"></i>
+          <span>Users</span>
+        </a>
+        <a href="admin-categories.html" class="nav-item">
+          <i class="fas fa-tags"></i>
+          <span>Categories</span>
+        </a>
+        <a href="admin-payments.html" class="nav-item">
+          <i class="fas fa-credit-card"></i>
+          <span>Payments</span>
+        </a>
+        <a href="admin-settings.html" class="nav-item">
+          <i class="fas fa-cog"></i>
+          <span>Settings</span>
+        </a>
+        <hr style="border: none; border-top: 1px solid var(--border); margin: var(--spacing-lg) 0;">
+        <a href="index.html" class="nav-item">
+          <i class="fas fa-home"></i>
+          <span>Back to Site</span>
+        </a>
+        <a href="#" class="nav-item" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Mobile Header -->
+    <header class="admin-header">
+      <a href="admin-dashboard.html" class="admin-logo">
+        <div class="logo-icon">iB</div>
+        <span class="logo-text">Admin</span>
+      </a>
+      
+      <div class="admin-header-title">Reports Dashboard</div>
+      
+      <div class="admin-header-actions">
+        <button class="admin-icon-btn" onclick="refreshData()">
+          <i class="fas fa-sync-alt"></i>
+        </button>
+        <button class="admin-icon-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <!-- Stats Cards -->
+      <div class="stats-grid" id="statsContainer">
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon pending">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label">Pending</div>
+              <div class="stat-value" id="pendingCount">0</div>
+            </div>
+          </div>
+          <div class="stat-trend">Awaiting review</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon reviewed">
+              <i class="fas fa-eye"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label">Reviewed</div>
+              <div class="stat-value" id="reviewedCount">0</div>
+            </div>
+          </div>
+          <div class="stat-trend">Under investigation</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon resolved">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label">Resolved</div>
+              <div class="stat-value" id="resolvedCount">0</div>
+            </div>
+          </div>
+          <div class="stat-trend">Completed</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon total">
+              <i class="fas fa-flag"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label">Total</div>
+              <div class="stat-value" id="totalCount">0</div>
+            </div>
+          </div>
+          <div class="stat-trend">All time reports</div>
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <div class="search-box">
+          <i class="fas fa-search search-icon"></i>
+          <input 
+            type="text" 
+            class="search-input" 
+            id="searchInput" 
+            placeholder="Search by ID, reporter, or reason..."
+            autocomplete="off"
+          >
+        </div>
+
+        <div class="filter-group">
+          <select class="filter-select" id="statusFilter">
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="reviewed">Reviewed</option>
+            <option value="resolved">Resolved</option>
+            <option value="dismissed">Dismissed</option>
+          </select>
+
+          <select class="filter-select" id="typeFilter">
+            <option value="all">All Types</option>
+            <option value="ad">Ad Reports</option>
+            <option value="user">User Reports</option>
+          </select>
+
+          <select class="filter-select" id="reasonFilter">
+            <option value="all">All Reasons</option>
+          </select>
+        </div>
+
+        <div class="date-range">
+          <input type="date" class="date-input" id="dateFrom" placeholder="From">
+          <span style="color: var(--text-light);">to</span>
+          <input type="date" class="date-input" id="dateTo" placeholder="To">
+        </div>
+      </div>
+
+      <!-- Reports Container -->
+      <div class="reports-container">
+        <!-- Table Header (Desktop) -->
+        <div class="reports-header">
+          <div>Report ID</div>
+          <div>Status</div>
+          <div>Details</div>
+          <div>Reporter</div>
+          <div>Submitted</div>
+          <div>Actions</div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading">
+          <div class="spinner"></div>
+          <div class="loading-text">Loading reports...</div>
+        </div>
+
+        <!-- Reports List -->
+        <div id="reportsList" class="reports-list" style="display: none;"></div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+          <div class="empty-icon">
+            <i class="fas fa-flag"></i>
+          </div>
+          <h3 class="empty-title">No reports found</h3>
+          <p class="empty-message" id="emptyMessage">
+            There are no reports matching your criteria.
+          </p>
+        </div>
+
+        <!-- Pagination -->
+        <div id="pagination" class="pagination" style="display: none;"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Report Detail Modal -->
+  <div class="modal-overlay" id="reportModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalReportId">Report #IB-2024-0000</h2>
+        <button class="modal-close" onclick="closeModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body" id="modalBody">
+        <!-- Dynamic content will be loaded here -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // SUPABASE CONFIGURATION
+    // ============================================
+    const SUPABASE_URL = 'https://uufhvmmgwzkxvvdbqemz.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1Zmh2bW1nd3preHZ2ZGJxZW16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMDIzNTYsImV4cCI6MjA4NTg3ODM1Nn0.WABHx4ilFRkhPHP-y4ZC4E8Kb7PRqY-cyxI8cVS8Tyc';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ============================================
+    // GLOBAL STATE
+    // ============================================
+    let currentUser = null;
+    let isAdmin = false;
+    let reports = [];
+    let filteredReports = [];
+    let currentPage = 1;
+    let itemsPerPage = 20;
+    let currentReport = null;
+
+    // Report reasons mapping
+    const REPORT_REASONS = {
+      'spam': 'Spam',
+      'fake': 'Fake or Counterfeit',
+      'scam': 'Scam or Fraud',
+      'wrong_category': 'Wrong Category',
+      'wrong_price': 'Wrong Price',
+      'sold': 'Already Sold',
+      'duplicate': 'Duplicate Ad',
+      'offensive': 'Offensive Content',
+      'personal_info': 'Personal Information',
+      'prohibited_item': 'Prohibited Item',
+      'other': 'Other'
+    };
+
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+    document.addEventListener('DOMContentLoaded', async function() {
+      await checkAuth();
+      await loadReports();
+      setupEventListeners();
+      populateReasonFilter();
+    });
+
+    // ============================================
+    // AUTHENTICATION & AUTHORIZATION
+    // ============================================
+    async function checkAuth() {
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        
+        if (!session) {
+          window.location.href = 'login.html?redirect=admin-dashboard.html';
+          return;
+        }
+
+        // Check if user is admin
+        const { data: profile, error } = await sb
+          .from('profiles')
+          .select('id, is_admin, admin_role, full_name')
+          .eq('id', session.user.id)
+          .single();
+
+        if (error || !profile || !profile.is_admin) {
+          showNotification('Unauthorized access. Admin privileges required.', 'error');
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 2000);
+          return;
+        }
+
+        currentUser = profile;
+        isAdmin = true;
+        
+      } catch (error) {
+        console.error('Auth error:', error);
+        window.location.href = 'login.html';
+      }
+    }
+
+    // ============================================
+    // LOAD REPORTS
+    // ============================================
+    async function loadReports() {
+      try {
+        showLoading();
+
+        const { data, error } = await sb
+          .from('reports')
+          .select(`
+            *,
+            reporter:profiles!reports_reporter_id_fkey(id, full_name, email, is_verified),
+            reported_ad:ads!reports_reported_ad_id_fkey(id, title, price, currency, image_urls, seller_id),
+            reported_user:profiles!reports_reported_user_id_fkey(id, full_name, email, is_verified),
+            resolver:profiles!reports_resolved_by_fkey(id, full_name)
+          `)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        reports = data || [];
+        applyFilters();
+        updateStats();
+        
+        hideLoading();
+        
+        if (reports.length === 0) {
+          showEmptyState('No reports have been submitted yet.');
+        }
+
+      } catch (error) {
+        console.error('Error loading reports:', error);
+        showNotification('Failed to load reports', 'error');
+        hideLoading();
+        showEmptyState('Failed to load reports. Please try again.');
+      }
+    }
+
+    // ============================================
+    // FILTERING & SEARCH
+    // ============================================
+    function setupEventListeners() {
+      // Search input with debounce
+      const searchInput = document.getElementById('searchInput');
+      let searchTimeout;
+      searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          currentPage = 1;
+          applyFilters();
+        }, 300);
+      });
+
+      // Filters
+      document.getElementById('statusFilter').addEventListener('change', function() {
+        currentPage = 1;
+        applyFilters();
+      });
+
+      document.getElementById('typeFilter').addEventListener('change', function() {
+        currentPage = 1;
+        applyFilters();
+      });
+
+      document.getElementById('reasonFilter').addEventListener('change', function() {
+        currentPage = 1;
+        applyFilters();
+      });
+
+      document.getElementById('dateFrom').addEventListener('change', function() {
+        currentPage = 1;
+        applyFilters();
+      });
+
+      document.getElementById('dateTo').addEventListener('change', function() {
+        currentPage = 1;
+        applyFilters();
+      });
+    }
+
+    function populateReasonFilter() {
+      const reasonFilter = document.getElementById('reasonFilter');
+      
+      Object.entries(REPORT_REASONS).forEach(([value, label]) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = label;
+        reasonFilter.appendChild(option);
+      });
+    }
+
+    function applyFilters() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const status = document.getElementById('statusFilter').value;
+      const type = document.getElementById('typeFilter').value;
+      const reason = document.getElementById('reasonFilter').value;
+      const dateFrom = document.getElementById('dateFrom').value;
+      const dateTo = document.getElementById('dateTo').value;
+
+      filteredReports = reports.filter(report => {
+        // Status filter
+        if (status !== 'all' && report.status !== status) return false;
+
+        // Type filter
+        if (type !== 'all') {
+          if (type === 'ad' && !report.reported_ad_id) return false;
+          if (type === 'user' && !report.reported_user_id) return false;
+        }
+
+        // Reason filter
+        if (reason !== 'all' && report.reason !== reason) return false;
+
+        // Date range filter
+        if (dateFrom) {
+          const reportDate = new Date(report.created_at).toISOString().split('T')[0];
+          if (reportDate < dateFrom) return false;
+        }
+        if (dateTo) {
+          const reportDate = new Date(report.created_at).toISOString().split('T')[0];
+          if (reportDate > dateTo) return false;
+        }
+
+        // Search term
+        if (searchTerm) {
+          const searchableFields = [
+            report.id.toString(),
+            report.reason,
+            report.description || '',
+            report.reporter?.full_name || '',
+            report.reporter?.email || '',
+            report.reported_ad?.title || '',
+            report.reported_user?.full_name || ''
+          ].join(' ').toLowerCase();
+
+          if (!searchableFields.includes(searchTerm)) return false;
+        }
+
+        return true;
+      });
+
+      renderReports();
+      updatePagination();
+    }
+
+    // ============================================
+    // RENDER REPORTS
+    // ============================================
+    function renderReports() {
+      const reportsList = document.getElementById('reportsList');
+      const emptyState = document.getElementById('emptyState');
+      
+      if (filteredReports.length === 0) {
+        reportsList.style.display = 'none';
+        emptyState.style.display = 'block';
+        document.getElementById('pagination').style.display = 'none';
+        return;
+      }
+
+      reportsList.style.display = 'flex';
+      emptyState.style.display = 'none';
+      
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const paginatedReports = filteredReports.slice(startIndex, endIndex);
+
+      reportsList.innerHTML = paginatedReports.map(report => createReportItem(report)).join('');
+    }
+
+    function createReportItem(report) {
+      const reportId = formatReportId(report.id);
+      const statusClass = `badge-${report.status || 'pending'}`;
+      const statusText = (report.status || 'pending').charAt(0).toUpperCase() + (report.status || 'pending').slice(1);
+      const reportType = report.reported_ad_id ? 'Ad' : 'User';
+      const targetName = report.reported_ad?.title || report.reported_user?.full_name || 'Unknown';
+      const reporterName = report.reporter?.full_name || 'Anonymous';
+      const timeAgo = getTimeAgo(report.created_at);
+      const reason = REPORT_REASONS[report.reason] || report.reason;
+
+      return `
+        <div class="report-item" onclick="openReportDetails(${report.id})">
+          <div class="report-header">
+            <span class="report-id">${reportId}</span>
+            <div>
+              <span class="report-badge ${statusClass}">${statusText}</span>
+              <span class="report-type">${reportType}</span>
+            </div>
+          </div>
+          
+          <div class="report-content">
+            <div class="report-reason">${escapeHtml(reason)}</div>
+            <div class="report-description">
+              ${escapeHtml(report.description || 'No additional details provided.')}
+            </div>
+            <div class="report-meta">
+              <span><i class="fas fa-tag"></i> ${escapeHtml(targetName.substring(0, 30))}${targetName.length > 30 ? '...' : ''}</span>
+              <span><i class="fas fa-user"></i> ${escapeHtml(reporterName)}</span>
+              <span><i class="fas fa-clock"></i> ${timeAgo}</span>
+            </div>
+          </div>
+          
+          <div class="report-footer">
+            <div class="reporter-info">
+              ${report.resolver ? `Resolved by: ${escapeHtml(report.resolver.full_name)}` : ''}
+            </div>
+            <div class="action-buttons" onclick="event.stopPropagation()">
+              ${renderActionButtons(report)}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderActionButtons(report) {
+      if (report.status === 'resolved' || report.status === 'dismissed') {
+        return `
+          <button class="action-btn btn-outline" onclick="openReportDetails(${report.id})">
+            <i class="fas fa-eye"></i> View
+          </button>
+        `;
+      }
+
+      return `
+        <button class="action-btn btn-review" onclick="updateReportStatus(${report.id}, 'reviewed')">
+          <i class="fas fa-check"></i> Review
+        </button>
+        <button class="action-btn btn-resolve" onclick="updateReportStatus(${report.id}, 'resolved')">
+          <i class="fas fa-check-circle"></i> Resolve
+        </button>
+        <button class="action-btn btn-dismiss" onclick="updateReportStatus(${report.id}, 'dismissed')">
+          <i class="fas fa-times"></i> Dismiss
+        </button>
+      `;
+    }
+
+    // ============================================
+    // REPORT DETAIL MODAL
+    // ============================================
+    async function openReportDetails(reportId) {
+      try {
+        const report = reports.find(r => r.id === reportId);
+        if (!report) return;
+
+        currentReport = report;
+        
+        const modal = document.getElementById('reportModal');
+        const modalBody = document.getElementById('modalBody');
+        const modalReportId = document.getElementById('modalReportId');
+        
+        modalReportId.textContent = `Report ${formatReportId(report.id)}`;
+        
+        modalBody.innerHTML = await generateReportDetails(report);
+        modal.classList.add('active');
+        
+      } catch (error) {
+        console.error('Error opening report details:', error);
+        showNotification('Failed to load report details', 'error');
+      }
+    }
+
+    async function generateReportDetails(report) {
+      const reportType = report.reported_ad_id ? 'Ad' : 'User';
+      const target = report.reported_ad || report.reported_user;
+      const reporter = report.reporter;
+      const resolver = report.resolver;
+      
+      let targetHtml = '';
+      
+      if (report.reported_ad_id) {
+        targetHtml = `
+          <div class="detail-card">
+            <div style="display: flex; gap: var(--spacing-md); margin-bottom: var(--spacing-md);">
+              <img src="${report.reported_ad?.image_urls?.[0] || 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=200&auto=format&fit=crop'}" 
+                   style="width: 80px; height: 80px; border-radius: var(--radius); object-fit: cover;"
+                   onerror="this.src='https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=200&auto=format&fit=crop'">
+              <div>
+                <div style="font-weight: 600; margin-bottom: 4px;">${escapeHtml(report.reported_ad?.title || 'Unknown Ad')}</div>
+                <div style="color: var(--primary); font-weight: 700;">${formatPrice(report.reported_ad?.price, report.reported_ad?.currency)}</div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">
+                  <i class="fas fa-user"></i> Seller ID: ${report.reported_ad?.seller_id || 'N/A'}
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; gap: var(--spacing-sm);">
+              <button class="action-btn btn-outline" onclick="window.open('ad-detail.html?id=${report.reported_ad_id}', '_blank')">
+                <i class="fas fa-external-link-alt"></i> View Ad
+              </button>
+              <button class="action-btn btn-danger" onclick="banAd(${report.reported_ad_id})">
+                <i class="fas fa-ban"></i> Ban Ad
+              </button>
+            </div>
+          </div>
+        `;
+      } else {
+        targetHtml = `
+          <div class="detail-card">
+            <div style="display: flex; gap: var(--spacing-md); align-items: center; margin-bottom: var(--spacing-md);">
+              <div class="user-avatar" style="width: 60px; height: 60px; font-size: 1.5rem; background: var(--primary);">
+                ${getInitials(report.reported_user?.full_name || 'User')}
+              </div>
+              <div>
+                <div style="font-weight: 600; font-size: 1.1rem;">${escapeHtml(report.reported_user?.full_name || 'Anonymous User')}</div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                  <i class="fas fa-envelope"></i> ${escapeHtml(report.reported_user?.email || 'No email')}
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px;">
+                  ${report.reported_user?.is_verified ? 
+                    '<span style="color: var(--success);"><i class="fas fa-check-circle"></i> Verified</span>' : 
+                    '<span style="color: var(--text-light);"><i class="fas fa-clock"></i> Unverified</span>'}
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; gap: var(--spacing-sm);">
+              <button class="action-btn btn-outline" onclick="window.open('user-profile.html?id=${report.reported_user_id}', '_blank')">
+                <i class="fas fa-external-link-alt"></i> View Profile
+              </button>
+              <button class="action-btn btn-danger" onclick="banUser('${report.reported_user_id}')">
+                <i class="fas fa-ban"></i> Ban User
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="detail-section">
+          <div class="detail-title">
+            <i class="fas fa-info-circle"></i> Report Information
+          </div>
+          <div class="detail-card">
+            <div class="detail-row">
+              <span class="detail-label">Report ID</span>
+              <span class="detail-value">${formatReportId(report.id)}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Status</span>
+              <span class="detail-value">
+                <span class="report-badge badge-${report.status || 'pending'}">
+                  ${(report.status || 'pending').charAt(0).toUpperCase() + (report.status || 'pending').slice(1)}
+                </span>
+              </span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Type</span>
+              <span class="detail-value">${reportType} Report</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Reason</span>
+              <span class="detail-value">${REPORT_REASONS[report.reason] || report.reason}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Submitted</span>
+              <span class="detail-value">${new Date(report.created_at).toLocaleString()}</span>
+            </div>
+            ${report.resolved_at ? `
+            <div class="detail-row">
+              <span class="detail-label">Resolved</span>
+              <span class="detail-value">${new Date(report.resolved_at).toLocaleString()}</span>
+            </div>
+            ` : ''}
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-title">
+            <i class="fas fa-flag"></i> Reported ${reportType}
+          </div>
+          ${targetHtml}
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-title">
+            <i class="fas fa-user"></i> Reporter
+          </div>
+          <div class="detail-card">
+            <div class="detail-row">
+              <span class="detail-label">Name</span>
+              <span class="detail-value">${escapeHtml(reporter?.full_name || 'Anonymous')}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Email</span>
+              <span class="detail-value">${escapeHtml(reporter?.email || 'No email')}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Verified</span>
+              <span class="detail-value">${reporter?.is_verified ? 'Yes' : 'No'}</span>
+            </div>
+          </div>
+        </div>
+
+        ${report.description ? `
+        <div class="detail-section">
+          <div class="detail-title">
+            <i class="fas fa-align-left"></i> Additional Details
+          </div>
+          <div class="detail-card" style="white-space: pre-line;">
+            ${escapeHtml(report.description)}
+          </div>
+        </div>
+        ` : ''}
+
+        <div class="detail-section">
+          <div class="detail-title">
+            <i class="fas fa-clipboard-check"></i> Admin Actions
+          </div>
+          <div class="detail-card">
+            <div class="admin-actions">
+              <textarea 
+                class="admin-textarea" 
+                id="adminNotes" 
+                placeholder="Add admin notes or resolution details..."
+              >${escapeHtml(report.admin_notes || '')}</textarea>
+              
+              <div class="action-group">
+                ${report.status !== 'resolved' && report.status !== 'dismissed' ? `
+                  <button class="btn btn-warning" onclick="updateReportStatus(${report.id}, 'reviewed', true)">
+                    <i class="fas fa-check"></i> Mark as Reviewed
+                  </button>
+                  <button class="btn btn-success" onclick="updateReportStatus(${report.id}, 'resolved', true)">
+                    <i class="fas fa-check-circle"></i> Resolve Report
+                  </button>
+                  <button class="btn btn-outline" onclick="updateReportStatus(${report.id}, 'dismissed', true)">
+                    <i class="fas fa-times"></i> Dismiss
+                  </button>
+                ` : `
+                  <button class="btn btn-outline" onclick="updateReportStatus(${report.id}, 'pending', true)">
+                    <i class="fas fa-undo"></i> Reopen Report
+                  </button>
+                `}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        ${resolver ? `
+        <div class="detail-section">
+          <div class="detail-title">
+            <i class="fas fa-user-shield"></i> Resolved By
+          </div>
+          <div class="detail-card">
+            <div class="detail-row">
+              <span class="detail-label">Admin</span>
+              <span class="detail-value">${escapeHtml(resolver.full_name)}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">At</span>
+              <span class="detail-value">${new Date(report.resolved_at).toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+        ` : ''}
+      `;
+    }
+
+    // ============================================
+    // UPDATE REPORT STATUS
+    // ============================================
+    async function updateReportStatus(reportId, status, closeModal = false) {
+      try {
+        const adminNotes = document.getElementById('adminNotes')?.value || '';
+        
+        const updateData = {
+          status: status,
+          admin_notes: adminNotes,
+          resolved_by: currentUser.id,
+          resolved_at: new Date().toISOString()
+        };
+
+        // If reopening, clear resolution info
+        if (status === 'pending') {
+          updateData.resolved_by = null;
+          updateData.resolved_at = null;
+        }
+
+        const { error } = await sb
+          .from('reports')
+          .update(updateData)
+          .eq('id', reportId);
+
+        if (error) throw error;
+
+        // Log admin action
+        await logAdminAction(reportId, status);
+
+        showNotification(`Report marked as ${status}`, 'success');
+        
+        // Refresh data
+        await loadReports();
+        
+        if (closeModal) {
+          closeModal();
+        }
+
+      } catch (error) {
+        console.error('Error updating report:', error);
+        showNotification('Failed to update report', 'error');
+      }
+    }
+
+    // ============================================
+    // ADMIN ACTIONS (Ban Ad/User)
+    // ============================================
+    async function banAd(adId) {
+      if (!confirm('Are you sure you want to ban this ad? The ad will no longer be visible to users.')) {
+        return;
+      }
+
+      try {
+        // Update ad status to 'banned'
+        const { error } = await sb
+          .from('ads')
+          .update({ 
+            status: 'banned',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', adId);
+
+        if (error) throw error;
+
+        // Log admin action
+        await sb.from('admin_actions').insert({
+          admin_id: currentUser.id,
+          action_type: 'ad_banned',
+          target_ad_id: adId,
+          performed_at: new Date().toISOString()
+        });
+
+        showNotification('Ad has been banned successfully', 'success');
+        
+        // Close modal and refresh
+        closeModal();
+        await loadReports();
+
+      } catch (error) {
+        console.error('Error banning ad:', error);
+        showNotification('Failed to ban ad', 'error');
+      }
+    }
+
+    async function banUser(userId) {
+      if (!confirm('Are you sure you want to ban this user? They will not be able to access their account or post ads.')) {
+        return;
+      }
+
+      try {
+        // Update user profile
+        const { error } = await sb
+          .from('profiles')
+          .update({ 
+            is_banned: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', userId);
+
+        if (error) throw error;
+
+        // Ban all user's ads
+        await sb
+          .from('ads')
+          .update({ 
+            status: 'banned',
+            updated_at: new Date().toISOString()
+          })
+          .eq('seller_id', userId);
+
+        // Log admin action
+        await sb.from('admin_actions').insert({
+          admin_id: currentUser.id,
+          action_type: 'user_banned',
+          target_user_id: userId,
+          performed_at: new Date().toISOString()
+        });
+
+        showNotification('User has been banned successfully', 'success');
+        
+        // Close modal and refresh
+        closeModal();
+        await loadReports();
+
+      } catch (error) {
+        console.error('Error banning user:', error);
+        showNotification('Failed to ban user', 'error');
+      }
+    }
+
+    // ============================================
+    // ADMIN ACTION LOGGING
+    // ============================================
+    async function logAdminAction(reportId, action) {
+      try {
+        await sb.from('admin_actions').insert({
+          admin_id: currentUser.id,
+          action_type: 'report_resolved',
+          target_report_id: reportId,
+          details: { action: action },
+          performed_at: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Error logging admin action:', error);
+      }
+    }
+
+    // ============================================
+    // STATISTICS
+    // ============================================
+    function updateStats() {
+      const pending = reports.filter(r => r.status === 'pending').length;
+      const reviewed = reports.filter(r => r.status === 'reviewed').length;
+      const resolved = reports.filter(r => r.status === 'resolved' || r.status === 'dismissed').length;
+      
+      document.getElementById('pendingCount').textContent = pending;
+      document.getElementById('reviewedCount').textContent = reviewed;
+      document.getElementById('resolvedCount').textContent = resolved;
+      document.getElementById('totalCount').textContent = reports.length;
+      
+      // Update pending badge
+      const badge = document.getElementById('pendingReportsBadge');
+      if (badge) {
+        badge.style.display = pending > 0 ? 'block' : 'none';
+      }
+    }
+
+    // ============================================
+    // PAGINATION
+    // ============================================
+    function updatePagination() {
+      const pagination = document.getElementById('pagination');
+      const totalPages = Math.ceil(filteredReports.length / itemsPerPage);
+      
+      if (totalPages <= 1) {
+        pagination.style.display = 'none';
+        return;
+      }
+
+      pagination.style.display = 'flex';
+      
+      let html = '';
+      
+      // Previous button
+      html += `
+        <button class="page-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+          <i class="fas fa-chevron-left"></i>
+        </button>
+      `;
+      
+      // Page numbers
+      for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+          html += `
+            <button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">
+              ${i}
+            </button>
+          `;
+        } else if (i === currentPage - 3 || i === currentPage + 3) {
+          html += `<span class="page-btn" style="border: none; background: none;">...</span>`;
+        }
+      }
+      
+      // Next button
+      html += `
+        <button class="page-btn" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      `;
+      
+      pagination.innerHTML = html;
+    }
+
+    function changePage(page) {
+      currentPage = page;
+      renderReports();
+      updatePagination();
+      
+      // Scroll to top of reports list
+      document.querySelector('.reports-container').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ============================================
+    // UI STATE MANAGEMENT
+    // ============================================
+    function showLoading() {
+      document.getElementById('loadingState').style.display = 'flex';
+      document.getElementById('reportsList').style.display = 'none';
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('pagination').style.display = 'none';
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingState').style.display = 'none';
+    }
+
+    function showEmptyState(message) {
+      document.getElementById('emptyState').style.display = 'block';
+      document.getElementById('emptyMessage').textContent = message || 'No reports found.';
+      document.getElementById('reportsList').style.display = 'none';
+      document.getElementById('pagination').style.display = 'none';
+    }
+
+    function closeModal() {
+      document.getElementById('reportModal').classList.remove('active');
+      currentReport = null;
+    }
+
+    // ============================================
+    // UTILITY FUNCTIONS
+    // ============================================
+    function formatReportId(id) {
+      return `#IB-${new Date().getFullYear()}-${String(id).padStart(4, '0')}`;
+    }
+
+    function formatPrice(price, currency = 'UGX') {
+      if (!price) return 'Price on request';
+      if (currency === 'UGX') {
+        return new Intl.NumberFormat('en-UG', {
+          style: 'currency',
+          currency: 'UGX',
+          minimumFractionDigits: 0
+        }).format(price);
+      }
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency,
+        minimumFractionDigits: 0
+      }).format(price);
+    }
+
+    function getTimeAgo(dateString) {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffSec = Math.floor(diffMs / 1000);
+      const diffMin = Math.floor(diffSec / 60);
+      const diffHour = Math.floor(diffMin / 60);
+      const diffDay = Math.floor(diffHour / 24);
+      
+      if (diffSec < 60) return 'Just now';
+      if (diffMin < 60) return `${diffMin}m ago`;
+      if (diffHour < 24) return `${diffHour}h ago`;
+      if (diffDay < 7) return `${diffDay}d ago`;
+      return date.toLocaleDateString('en-UG', { month: 'short', day: 'numeric' });
+    }
+
+    function getInitials(name) {
+      if (!name) return 'U';
+      return name
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function showNotification(message, type = 'success') {
+      const container = document.getElementById('notification-container') || createNotificationContainer();
+      
+      const notification = document.createElement('div');
+      notification.className = 'notification-toast';
+      
+      let icon = 'check-circle';
+      if (type === 'error') icon = 'exclamation-circle';
+      if (type === 'warning') icon = 'exclamation-triangle';
+      
+      notification.innerHTML = `<i class="fas fa-${icon}" style="margin-right: 8px;"></i>${message}`;
+      
+      if (type === 'error') notification.style.background = 'var(--danger)';
+      if (type === 'warning') notification.style.background = 'var(--warning)';
+      
+      container.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.remove();
+          }
+        }, 300);
+      }, 3000);
+    }
+
+    function createNotificationContainer() {
+      const container = document.createElement('div');
+      container.id = 'notification-container';
+      container.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 3000;
+        pointer-events: none;
+      `;
+      document.body.appendChild(container);
+      return container;
+    }
+
+    function refreshData() {
+      loadReports();
+      showNotification('Refreshing data...', 'info');
+    }
+
+    async function logout() {
+      try {
+        await sb.auth.signOut();
+        window.location.href = 'index.html';
+      } catch (error) {
+        console.error('Logout error:', error);
+      }
+    }
+
+    // ============================================
+    // GLOBAL EXPORTS
+    // ============================================
+    window.openReportDetails = openReportDetails;
+    window.updateReportStatus = updateReportStatus;
+    window.banAd = banAd;
+    window.banUser = banUser;
+    window.closeModal = closeModal;
+    window.changePage = changePage;
+    window.refreshData = refreshData;
+    window.logout = logout;
+  </script>
+</body>
+</html>

@@ -1,0 +1,2267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Ads - Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        :root {
+            --primary: #2563EB;
+            --primary-light: #3B82F6;
+            --secondary: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --info: #3B82F6;
+            --dark: #1F2937;
+            --gray: #6B7280;
+            --light-gray: #E5E7EB;
+            --lightest-gray: #F3F4F6;
+            --white: #FFFFFF;
+            --radius: 8px;
+            --radius-lg: 12px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--lightest-gray);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: var(--white);
+            padding: 20px 0;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .admin-nav {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: var(--gray);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            transition: all 0.2s;
+        }
+        
+        .nav-link:hover {
+            background: var(--lightest-gray);
+            color: var(--primary);
+        }
+        
+        .nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--gray);
+        }
+        
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+        
+        .page-subtitle {
+            color: var(--gray);
+            margin-bottom: 30px;
+        }
+        
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+        
+        .stat-icon.total { background: var(--primary); }
+        .stat-icon.active { background: var(--secondary); }
+        .stat-icon.pending { background: var(--warning); }
+        .stat-icon.expired { background: var(--gray); }
+        .stat-icon.banned { background: var(--danger); }
+        .stat-icon.featured { background: var(--info); }
+        
+        .stat-content h3 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .stat-content p {
+            color: var(--gray);
+            font-size: 14px;
+        }
+        
+        /* Filters Section */
+        .filters-section {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+        }
+        
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .filter-label {
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark);
+            font-size: 14px;
+        }
+        
+        .filter-select, .filter-input {
+            padding: 12px;
+            border: 1px solid var(--light-gray);
+            border-radius: var(--radius);
+            font-size: 14px;
+            width: 100%;
+        }
+        
+        .filter-select:focus, .filter-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .filter-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: var(--light-gray);
+            color: var(--dark);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--gray);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #DC2626;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #0DA271;
+            transform: translateY(-2px);
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #D97706;
+            transform: translateY(-2px);
+        }
+        
+        /* Ads Table */
+        .ads-table-container {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            overflow-x: auto;
+            margin-bottom: 30px;
+        }
+        
+        .ads-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .ads-table th {
+            background: var(--lightest-gray);
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+            border-bottom: 2px solid var(--light-gray);
+            white-space: nowrap;
+        }
+        
+        .ads-table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--light-gray);
+            vertical-align: middle;
+        }
+        
+        .ads-table tr:hover {
+            background: var(--lightest-gray);
+        }
+        
+        .ad-thumbnail {
+            width: 60px;
+            height: 60px;
+            border-radius: var(--radius);
+            background: var(--light-gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray);
+            overflow: hidden;
+        }
+        
+        .ad-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .ad-info {
+            min-width: 250px;
+        }
+        
+        .ad-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--dark);
+            display: block;
+            text-decoration: none;
+        }
+        
+        .ad-title:hover {
+            color: var(--primary);
+        }
+        
+        .ad-meta {
+            font-size: 12px;
+            color: var(--gray);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .status-badge.active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--secondary);
+        }
+        
+        .status-badge.pending, .status-badge.draft {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+        
+        .status-badge.expired {
+            background: rgba(107, 114, 128, 0.1);
+            color: var(--gray);
+        }
+        
+        .status-badge.banned {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+        
+        .status-badge.sold {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+        
+        .promo-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-right: 4px;
+            margin-bottom: 4px;
+        }
+        
+        .promo-badge.boost {
+            background: rgba(255, 149, 0, 0.1);
+            color: #FF9500;
+        }
+        
+        .promo-badge.featured {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+        }
+        
+        .promo-badge.urgent {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--lightest-gray);
+            color: var(--gray);
+            border: none;
+        }
+        
+        .btn-icon:hover {
+            background: var(--light-gray);
+        }
+        
+        .btn-icon.view:hover { color: var(--primary); }
+        .btn-icon.edit:hover { color: var(--info); }
+        .btn-icon.delete:hover { color: var(--danger); }
+        .btn-icon.feature:hover { color: var(--warning); }
+        .btn-icon.ban:hover { color: var(--danger); }
+        .btn-icon.approve:hover { color: var(--secondary); }
+        
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+        }
+        
+        .pagination-info {
+            color: var(--gray);
+            font-size: 14px;
+        }
+        
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .pagination-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--light-gray);
+            background: var(--white);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .pagination-btn:hover:not(:disabled) {
+            background: var(--lightest-gray);
+            border-color: var(--primary);
+        }
+        
+        .pagination-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalSlideUp 0.3s ease;
+        }
+        
+        @keyframes modalSlideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .modal-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--gray);
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius);
+        }
+        
+        .close-modal:hover {
+            background: var(--lightest-gray);
+            color: var(--dark);
+        }
+        
+        /* Ad Detail Modal */
+        .ad-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        
+        .ad-images {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .ad-image {
+            width: 100%;
+            height: 120px;
+            border-radius: var(--radius);
+            background: var(--light-gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray);
+            overflow: hidden;
+        }
+        
+        .ad-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .detail-group {
+            margin-bottom: 16px;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: var(--gray);
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+        
+        .detail-value {
+            color: var(--dark);
+            font-size: 15px;
+        }
+        
+        .user-info-card {
+            background: var(--lightest-gray);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        
+        /* Messages */
+        .message {
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .error-message {
+            background: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #FCA5A5;
+        }
+        
+        .success-message {
+            background: #D1FAE5;
+            color: #065F46;
+            border: 1px solid #A7F3D0;
+        }
+        
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--light-gray);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Bulk Actions */
+        .bulk-actions {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .select-all {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .ad-detail-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .ads-table {
+                font-size: 14px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .admin-nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-actions {
+                justify-content: stretch;
+            }
+            
+            .filter-actions .btn {
+                flex: 1;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn-icon {
+                width: 32px;
+                height: 32px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .pagination {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="admin-dashboard.html" class="logo">
+                    <i class="fas fa-bullhorn"></i>
+                    iBlue Uganda Admin
+                </a>
+                <div class="admin-nav">
+                    <a href="admin-dashboard.html" class="nav-link">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Dashboard
+                    </a>
+                    <a href="admin-ads.html" class="nav-link active">
+                        <i class="fas fa-ad"></i>
+                        Ads
+                    </a>
+                    <a href="admin-users.html" class="nav-link">
+                        <i class="fas fa-users"></i>
+                        Users
+                    </a>
+                    <a href="admin-pricing.html" class="nav-link">
+                        <i class="fas fa-tags"></i>
+                        Pricing
+                    </a>
+                    <a href="admin-reports.html" class="nav-link">
+                        <i class="fas fa-flag"></i>
+                        Reports
+                    </a>
+                </div>
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="adminName">Admin User</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h1 class="page-title">Manage Ads</h1>
+        <p class="page-subtitle">View, manage, and moderate all advertisements on the platform</p>
+        
+        <!-- Messages -->
+        <div class="error-message message" id="errorMessage"></div>
+        <div class="success-message message" id="successMessage"></div>
+        
+        <!-- Stats Cards -->
+        <div class="stats-grid" id="statsGrid">
+            <!-- Stats will be loaded here -->
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <button class="btn btn-primary" id="refreshBtn">
+                <i class="fas fa-sync-alt"></i>
+                Refresh
+            </button>
+            <button class="btn btn-secondary" id="exportBtn">
+                <i class="fas fa-download"></i>
+                Export CSV
+            </button>
+            <button class="btn btn-warning" id="expiringBtn">
+                <i class="fas fa-clock"></i>
+                View Expiring Soon
+            </button>
+            <button class="btn btn-success" id="featuredBtn">
+                <i class="fas fa-star"></i>
+                View Featured
+            </button>
+        </div>
+        
+        <!-- Filters Section -->
+        <div class="filters-section">
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Status</label>
+                    <select class="filter-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="draft">Draft</option>
+                        <option value="sold">Sold</option>
+                        <option value="expired">Expired</option>
+                        <option value="banned">Banned</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Category</label>
+                    <select class="filter-select" id="categoryFilter">
+                        <option value="">All Categories</option>
+                        <!-- Categories will be loaded here -->
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Region</label>
+                    <select class="filter-select" id="regionFilter">
+                        <option value="">All Regions</option>
+                        <!-- Regions will be loaded here -->
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Date Range</label>
+                    <input type="text" class="filter-input" id="dateRangeFilter" placeholder="Select date range">
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Search</label>
+                    <input type="text" class="filter-input" id="searchFilter" placeholder="Search by title, seller, or ID">
+                </div>
+            </div>
+            
+            <div class="filter-actions">
+                <button class="btn btn-secondary" id="clearFiltersBtn">
+                    <i class="fas fa-times"></i>
+                    Clear Filters
+                </button>
+                <button class="btn btn-primary" id="applyFiltersBtn">
+                    <i class="fas fa-filter"></i>
+                    Apply Filters
+                </button>
+            </div>
+        </div>
+        
+        <!-- Bulk Actions -->
+        <div class="bulk-actions" id="bulkActions" style="display: none;">
+            <div class="select-all">
+                <input type="checkbox" id="selectAllCheckbox">
+                <label for="selectAllCheckbox" style="font-weight: 500;">
+                    <span id="selectedCount">0</span> ads selected
+                </label>
+            </div>
+            <div style="flex: 1;"></div>
+            <button class="btn btn-secondary" id="bulkApproveBtn">
+                <i class="fas fa-check-circle"></i>
+                Approve Selected
+            </button>
+            <button class="btn btn-warning" id="bulkFeatureBtn">
+                <i class="fas fa-star"></i>
+                Feature Selected
+            </button>
+            <button class="btn btn-danger" id="bulkDeleteBtn">
+                <i class="fas fa-trash"></i>
+                Delete Selected
+            </button>
+        </div>
+        
+        <!-- Ads Table -->
+        <div class="ads-table-container">
+            <table class="ads-table" id="adsTable">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">
+                            <input type="checkbox" id="tableSelectAll">
+                        </th>
+                        <th>Ad Details</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Seller</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Promotions</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="adsTableBody">
+                    <!-- Ads will be loaded here -->
+                </tbody>
+            </table>
+            
+            <!-- Loading State -->
+            <div id="loadingState" style="text-align: center; padding: 60px;">
+                <div class="loading" style="margin: 0 auto;"></div>
+                <p style="margin-top: 10px; color: var(--gray);">Loading ads...</p>
+            </div>
+            
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState" style="display: none; text-align: center; padding: 60px 20px; color: var(--gray);">
+                <i class="fas fa-ad" style="font-size: 48px; margin-bottom: 20px;"></i>
+                <h3 style="margin-bottom: 10px;">No ads found</h3>
+                <p>Try adjusting your filters or check back later</p>
+            </div>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="pagination">
+            <div class="pagination-info" id="paginationInfo">
+                Showing 0-0 of 0 ads
+            </div>
+            <div class="pagination-controls" id="paginationControls">
+                <!-- Pagination buttons will be added here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Ad Detail Modal -->
+    <div class="modal" id="adDetailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Ad Details</h2>
+                <button class="close-modal" id="closeAdDetailModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div id="adDetailContent">
+                <!-- Ad details will be loaded here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Action Confirmation Modal -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 class="modal-title" id="confirmModalTitle">Confirm Action</h2>
+                <button class="close-modal" id="closeConfirmModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div style="padding: 20px 0;">
+                <p id="confirmModalMessage">Are you sure you want to perform this action?</p>
+                <div id="confirmModalDetails" style="margin-top: 15px;"></div>
+            </div>
+            
+            <div style="display: flex; gap: 12px; margin-top: 30px;">
+                <button class="btn" id="confirmModalCancel" 
+                        style="flex: 1; background: var(--light-gray); color: var(--dark);">
+                    Cancel
+                </button>
+                <button class="btn btn-danger" id="confirmModalAction" style="flex: 1;">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Feature Ad Modal -->
+    <div class="modal" id="featureModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Feature Ad</h2>
+                <button class="close-modal" id="closeFeatureModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div style="padding: 20px 0;">
+                <p>How long should this ad be featured?</p>
+                
+                <div class="filter-group" style="margin-top: 20px;">
+                    <label class="filter-label">Duration</label>
+                    <select class="filter-select" id="featureDuration">
+                        <option value="7">1 Week</option>
+                        <option value="14">2 Weeks</option>
+                        <option value="30">1 Month</option>
+                        <option value="custom">Custom Date</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group" id="customDateGroup" style="display: none; margin-top: 15px;">
+                    <label class="filter-label">End Date</label>
+                    <input type="text" class="filter-input" id="customFeatureDate" placeholder="Select end date">
+                </div>
+                
+                <div class="filter-group" style="margin-top: 20px;">
+                    <label class="filter-label">Notes (Optional)</label>
+                    <textarea class="filter-input" id="featureNotes" rows="3" placeholder="Add any notes about this feature..."></textarea>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 12px; margin-top: 30px;">
+                <button class="btn" id="cancelFeatureBtn" 
+                        style="flex: 1; background: var(--light-gray); color: var(--dark);">
+                    Cancel
+                </button>
+                <button class="btn btn-warning" id="confirmFeatureBtn" style="flex: 1;">
+                    <i class="fas fa-star"></i>
+                    Feature Ad
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://your-project.supabase.co';
+        const SUPABASE_ANON_KEY = 'your-anon-key';
+        
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // State
+        let currentAdmin = null;
+        let ads = [];
+        let categories = [];
+        let regions = [];
+        let currentAd = null;
+        let selectedAdIds = new Set();
+        let currentPage = 1;
+        let totalPages = 1;
+        let itemsPerPage = 20;
+        let currentFilters = {};
+        
+        // DOM Elements
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const statsGrid = document.getElementById('statsGrid');
+        const adsTableBody = document.getElementById('adsTableBody');
+        const loadingState = document.getElementById('loadingState');
+        const emptyState = document.getElementById('emptyState');
+        const paginationInfo = document.getElementById('paginationInfo');
+        const paginationControls = document.getElementById('paginationControls');
+        const bulkActions = document.getElementById('bulkActions');
+        const selectedCount = document.getElementById('selectedCount');
+        const tableSelectAll = document.getElementById('tableSelectAll');
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        const adminName = document.getElementById('adminName');
+        
+        // Filters
+        const statusFilter = document.getElementById('statusFilter');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const regionFilter = document.getElementById('regionFilter');
+        const dateRangeFilter = document.getElementById('dateRangeFilter');
+        const searchFilter = document.getElementById('searchFilter');
+        const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+        
+        // Modals
+        const adDetailModal = document.getElementById('adDetailModal');
+        const confirmModal = document.getElementById('confirmModal');
+        const featureModal = document.getElementById('featureModal');
+        const closeAdDetailModal = document.getElementById('closeAdDetailModal');
+        const closeConfirmModal = document.getElementById('closeConfirmModal');
+        const closeFeatureModal = document.getElementById('closeFeatureModal');
+        const confirmModalCancel = document.getElementById('confirmModalCancel');
+        const confirmModalAction = document.getElementById('confirmModalAction');
+        const cancelFeatureBtn = document.getElementById('cancelFeatureBtn');
+        const confirmFeatureBtn = document.getElementById('confirmFeatureBtn');
+        const featureDuration = document.getElementById('featureDuration');
+        const customDateGroup = document.getElementById('customDateGroup');
+        const customFeatureDate = document.getElementById('customFeatureDate');
+        
+        // Quick Actions
+        const refreshBtn = document.getElementById('refreshBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const expiringBtn = document.getElementById('expiringBtn');
+        const featuredBtn = document.getElementById('featuredBtn');
+        
+        // Bulk Actions
+        const bulkApproveBtn = document.getElementById('bulkApproveBtn');
+        const bulkFeatureBtn = document.getElementById('bulkFeatureBtn');
+        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            await checkAdminAuth();
+            await loadCategories();
+            await loadRegions();
+            initializeDatePicker();
+            await loadStats();
+            await loadAds();
+            setupEventListeners();
+        });
+        
+        async function checkAdminAuth() {
+            try {
+                const { data: { session } } = await sb.auth.getSession();
+                
+                if (!session) {
+                    window.location.href = 'admin-login.html';
+                    return;
+                }
+                
+                const { data: profile, error } = await sb
+                    .from('profiles')
+                    .select('id, full_name, email, is_admin, admin_role')
+                    .eq('id', session.user.id)
+                    .single();
+                
+                if (error) throw error;
+                
+                if (!profile || !profile.is_admin) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                currentAdmin = profile;
+                adminName.textContent = profile.full_name || profile.email;
+                
+            } catch (error) {
+                console.error('Auth error:', error);
+                window.location.href = 'admin-login.html';
+            }
+        }
+        
+        async function loadCategories() {
+            try {
+                const { data, error } = await sb
+                    .from('categories')
+                    .select('id, name, parent_id')
+                    .eq('is_active', true)
+                    .order('display_order');
+                
+                if (error) throw error;
+                
+                categories = data || [];
+                
+                // Populate category filter
+                let categoryOptions = '<option value="">All Categories</option>';
+                categories.forEach(cat => {
+                    categoryOptions += `<option value="${cat.id}">${cat.name}</option>`;
+                });
+                categoryFilter.innerHTML = categoryOptions;
+                
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+        
+        async function loadRegions() {
+            try {
+                const { data, error } = await sb
+                    .from('ads')
+                    .select('region')
+                    .not('region', 'is', null);
+                
+                if (error) throw error;
+                
+                // Get unique regions
+                const uniqueRegions = [...new Set(data.map(item => item.region))].filter(Boolean).sort();
+                regions = uniqueRegions;
+                
+                // Populate region filter
+                let regionOptions = '<option value="">All Regions</option>';
+                regions.forEach(region => {
+                    regionOptions += `<option value="${region}">${region}</option>`;
+                });
+                regionFilter.innerHTML = regionOptions;
+                
+            } catch (error) {
+                console.error('Error loading regions:', error);
+            }
+        }
+        
+        function initializeDatePicker() {
+            flatpickr(dateRangeFilter, {
+                mode: "range",
+                dateFormat: "Y-m-d",
+                maxDate: "today"
+            });
+            
+            flatpickr(customFeatureDate, {
+                dateFormat: "Y-m-d",
+                minDate: "today"
+            });
+        }
+        
+        async function loadStats() {
+            try {
+                // Total ads
+                const { count: totalCount, error: totalError } = await sb
+                    .from('ads')
+                    .select('*', { count: 'exact', head: true });
+                
+                if (totalError) throw totalError;
+                
+                // Active ads
+                const { count: activeCount, error: activeError } = await sb
+                    .from('ads')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('status', 'active');
+                
+                if (activeError) throw activeError;
+                
+                // Draft/pending ads
+                const { count: draftCount, error: draftError } = await sb
+                    .from('ads')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('status', 'draft');
+                
+                if (draftError) throw draftError;
+                
+                // Expired ads
+                const { count: expiredCount, error: expiredError } = await sb
+                    .from('ads')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('status', 'expired');
+                
+                if (expiredError) throw expiredError;
+                
+                // Banned ads
+                const { count: bannedCount, error: bannedError } = await sb
+                    .from('ads')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('status', 'banned');
+                
+                if (bannedError) throw bannedError;
+                
+                // Featured ads
+                const { count: featuredCount, error: featuredError } = await sb
+                    .from('ads')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('is_featured', true)
+                    .eq('status', 'active');
+                
+                if (featuredError) throw featuredError;
+                
+                // Render stats
+                const stats = [
+                    { 
+                        title: 'Total Ads', 
+                        value: totalCount || 0, 
+                        icon: 'fa-ad', 
+                        class: 'total' 
+                    },
+                    { 
+                        title: 'Active', 
+                        value: activeCount || 0, 
+                        icon: 'fa-check-circle', 
+                        class: 'active' 
+                    },
+                    { 
+                        title: 'Draft/Pending', 
+                        value: draftCount || 0, 
+                        icon: 'fa-clock', 
+                        class: 'pending' 
+                    },
+                    { 
+                        title: 'Expired', 
+                        value: expiredCount || 0, 
+                        icon: 'fa-calendar-times', 
+                        class: 'expired' 
+                    },
+                    { 
+                        title: 'Banned', 
+                        value: bannedCount || 0, 
+                        icon: 'fa-ban', 
+                        class: 'banned' 
+                    },
+                    { 
+                        title: 'Featured', 
+                        value: featuredCount || 0, 
+                        icon: 'fa-star', 
+                        class: 'featured' 
+                    }
+                ];
+                
+                let statsHtml = '';
+                stats.forEach(stat => {
+                    statsHtml += `
+                        <div class="stat-card">
+                            <div class="stat-icon ${stat.class}">
+                                <i class="fas ${stat.icon}"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>${stat.value.toLocaleString()}</h3>
+                                <p>${stat.title}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                statsGrid.innerHTML = statsHtml;
+                
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+        
+        async function loadAds(page = 1) {
+            try {
+                loadingState.style.display = 'block';
+                emptyState.style.display = 'none';
+                adsTableBody.innerHTML = '';
+                selectedAdIds.clear();
+                updateBulkActions();
+                
+                // Build query
+                let query = sb
+                    .from('ads')
+                    .select(`
+                        *,
+                        categories!ads_category_id_fkey(id, name),
+                        profiles!ads_seller_id_fkey(id, full_name, email, phone)
+                    `, { count: 'exact' });
+                
+                // Apply filters
+                if (currentFilters.status) {
+                    query = query.eq('status', currentFilters.status);
+                }
+                
+                if (currentFilters.category_id) {
+                    query = query.eq('category_id', currentFilters.category_id);
+                }
+                
+                if (currentFilters.region) {
+                    query = query.eq('region', currentFilters.region);
+                }
+                
+                if (currentFilters.date_from && currentFilters.date_to) {
+                    query = query.gte('created_at', currentFilters.date_from);
+                    query = query.lte('created_at', currentFilters.date_to);
+                }
+                
+                if (currentFilters.search) {
+                    query = query.or(`title.ilike.%${currentFilters.search}%,description.ilike.%${currentFilters.search}%,profiles.full_name.ilike.%${currentFilters.search}%`);
+                }
+                
+                // Apply pagination
+                const from = (page - 1) * itemsPerPage;
+                const to = from + itemsPerPage - 1;
+                query = query.range(from, to);
+                
+                // Order by creation date (newest first)
+                query = query.order('created_at', { ascending: false });
+                
+                const { data: adsData, count, error } = await query;
+                
+                if (error) throw error;
+                
+                ads = adsData || [];
+                currentPage = page;
+                totalPages = Math.ceil((count || 0) / itemsPerPage);
+                
+                renderAdsTable();
+                updatePagination();
+                
+            } catch (error) {
+                console.error('Error loading ads:', error);
+                showError('Failed to load ads');
+            } finally {
+                loadingState.style.display = 'none';
+            }
+        }
+        
+        function renderAdsTable() {
+            if (ads.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            let html = '';
+            
+            ads.forEach(ad => {
+                const category = ad.categories?.name || 'Unknown';
+                const seller = ad.profiles?.full_name || ad.profiles?.email || 'Unknown';
+                const phone = ad.profiles?.phone || 'N/A';
+                
+                // Get promotion badges
+                const promotionBadges = [];
+                if (ad.is_featured && new Date(ad.featured_until) > new Date()) {
+                    promotionBadges.push('<span class="promo-badge featured"><i class="fas fa-star"></i> Featured</span>');
+                }
+                if (ad.boost_until && new Date(ad.boost_until) > new Date()) {
+                    promotionBadges.push('<span class="promo-badge boost"><i class="fas fa-rocket"></i> Boosted</span>');
+                }
+                
+                // Format price
+                const price = ad.price ? 
+                    `${ad.currency || 'UGX'} ${parseFloat(ad.price).toLocaleString()}` : 
+                    'Negotiable';
+                
+                // Format created date
+                const createdDate = new Date(ad.created_at).toLocaleDateString();
+                
+                html += `
+                    <tr data-ad-id="${ad.id}">
+                        <td>
+                            <input type="checkbox" class="ad-checkbox" value="${ad.id}">
+                        </td>
+                        <td>
+                            <div class="ad-info">
+                                <div style="display: flex; gap: 12px; align-items: flex-start;">
+                                    <div class="ad-thumbnail">
+                                        ${ad.image_urls && ad.image_urls.length > 0 ? 
+                                            `<img src="${ad.image_urls[0]}" alt="${ad.title}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-image\\'></i>';">` :
+                                            '<i class="fas fa-image"></i>'
+                                        }
+                                    </div>
+                                    <div>
+                                        <a href="#" class="ad-title view-ad" data-id="${ad.id}">
+                                            ${ad.title || 'Untitled Ad'}
+                                        </a>
+                                        <div class="ad-meta">
+                                            <span>ID: ${ad.id}</span>
+                                            <span>Views: ${ad.view_count || 0}</span>
+                                        </div>
+                                        <div style="margin-top: 8px;">
+                                            ${promotionBadges.join('')}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${category}</td>
+                        <td>${price}</td>
+                        <td>
+                            <div>
+                                <strong>${seller}</strong>
+                                <div style="font-size: 12px; color: var(--gray); margin-top: 4px;">${phone}</div>
+                            </div>
+                        </td>
+                        <td>
+                            ${ad.district || 'Unknown'}
+                            <div style="font-size: 12px; color: var(--gray); margin-top: 4px;">${ad.region || ''}</div>
+                        </td>
+                        <td>
+                            <span class="status-badge ${ad.status}">
+                                <i class="fas fa-${getStatusIcon(ad.status)}"></i>
+                                ${ad.status.charAt(0).toUpperCase() + ad.status.slice(1)}
+                            </span>
+                        </td>
+                        <td>
+                            ${promotionBadges.length > 0 ? promotionBadges.join('') : 'None'}
+                        </td>
+                        <td>${createdDate}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-icon view view-ad" data-id="${ad.id}" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                ${ad.status === 'draft' ? `
+                                    <button class="btn-icon approve approve-ad" data-id="${ad.id}" title="Approve Ad">
+                                        <i class="fas fa-check-circle"></i>
+                                    </button>
+                                ` : ''}
+                                ${ad.status === 'active' && !ad.is_featured ? `
+                                    <button class="btn-icon feature feature-ad" data-id="${ad.id}" title="Feature Ad">
+                                        <i class="fas fa-star"></i>
+                                    </button>
+                                ` : ''}
+                                ${ad.status !== 'banned' ? `
+                                    <button class="btn-icon ban ban-ad" data-id="${ad.id}" title="Ban Ad">
+                                        <i class="fas fa-ban"></i>
+                                    </button>
+                                ` : ''}
+                                <button class="btn-icon delete delete-ad" data-id="${ad.id}" title="Delete Ad">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            adsTableBody.innerHTML = html;
+            
+            // Add event listeners to checkboxes
+            document.querySelectorAll('.ad-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        selectedAdIds.add(this.value);
+                    } else {
+                        selectedAdIds.delete(this.value);
+                    }
+                    updateBulkActions();
+                });
+            });
+            
+            // Add event listeners to action buttons
+            document.querySelectorAll('.view-ad').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    viewAdDetails(this.dataset.id);
+                });
+            });
+            
+            document.querySelectorAll('.approve-ad').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    approveAd(this.dataset.id);
+                });
+            });
+            
+            document.querySelectorAll('.feature-ad').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    showFeatureModal(this.dataset.id);
+                });
+            });
+            
+            document.querySelectorAll('.ban-ad').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    banAd(this.dataset.id);
+                });
+            });
+            
+            document.querySelectorAll('.delete-ad').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    deleteAd(this.dataset.id);
+                });
+            });
+        }
+        
+        function getStatusIcon(status) {
+            switch(status) {
+                case 'active': return 'check-circle';
+                case 'draft': return 'clock';
+                case 'sold': return 'check';
+                case 'expired': return 'calendar-times';
+                case 'banned': return 'ban';
+                default: return 'question-circle';
+            }
+        }
+        
+        async function viewAdDetails(adId) {
+            try {
+                const { data: ad, error } = await sb
+                    .from('ads')
+                    .select(`
+                        *,
+                        categories!ads_category_id_fkey(name),
+                        profiles!ads_seller_id_fkey(full_name, email, phone, avatar_url, is_verified),
+                        ad_promotions!ad_promotions_ad_id_fkey(*)
+                    `)
+                    .eq('id', adId)
+                    .single();
+                
+                if (error) throw error;
+                
+                currentAd = ad;
+                
+                // Format data
+                const price = ad.price ? 
+                    `${ad.currency || 'UGX'} ${parseFloat(ad.price).toLocaleString()}` : 
+                    'Negotiable';
+                
+                const createdDate = new Date(ad.created_at).toLocaleString();
+                const updatedDate = new Date(ad.updated_at).toLocaleString();
+                const expiresDate = ad.expires_at ? new Date(ad.expires_at).toLocaleString() : 'Never';
+                
+                // Get active promotions
+                const activePromotions = ad.ad_promotions?.filter(p => 
+                    p.is_active && new Date(p.ends_at) > new Date()
+                ) || [];
+                
+                let promotionsHtml = '';
+                if (activePromotions.length > 0) {
+                    promotionsHtml = '<h4 style="margin-top: 20px;">Active Promotions</h4>';
+                    activePromotions.forEach(promo => {
+                        const endsAt = new Date(promo.ends_at).toLocaleDateString();
+                        promotionsHtml += `
+                            <div style="background: var(--lightest-gray); padding: 10px; border-radius: var(--radius); margin-top: 8px;">
+                                <strong>${promo.promotion_type.charAt(0).toUpperCase() + promo.promotion_type.slice(1)}</strong>
+                                <div style="font-size: 12px; color: var(--gray);">
+                                    Ends: ${endsAt} | Paid: ${promo.currency} ${parseFloat(promo.amount_paid || 0).toLocaleString()}
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                // Get images
+                let imagesHtml = '';
+                if (ad.image_urls && ad.image_urls.length > 0) {
+                    imagesHtml = '<h4 style="margin-top: 20px;">Images</h4><div class="ad-images">';
+                    ad.image_urls.forEach((url, index) => {
+                        imagesHtml += `
+                            <div class="ad-image">
+                                <img src="${url}" alt="Ad image ${index + 1}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-image\\'></i>';">
+                            </div>
+                        `;
+                    });
+                    imagesHtml += '</div>';
+                }
+                
+                const content = `
+                    <div class="ad-detail-grid">
+                        <div>
+                            <h3 style="margin-bottom: 20px;">${ad.title}</h3>
+                            
+                            <div class="detail-group">
+                                <div class="detail-label">Description</div>
+                                <div class="detail-value">${ad.description || 'No description'}</div>
+                            </div>
+                            
+                            <div class="detail-group">
+                                <div class="detail-label">Price</div>
+                                <div class="detail-value">${price} ${ad.is_negotiable ? '(Negotiable)' : ''}</div>
+                            </div>
+                            
+                            <div class="detail-group">
+                                <div class="detail-label">Condition</div>
+                                <div class="detail-value">${ad.condition || 'Unknown'}</div>
+                            </div>
+                            
+                            <div class="detail-group">
+                                <div class="detail-label">Category</div>
+                                <div class="detail-value">${ad.categories?.name || 'Unknown'}</div>
+                            </div>
+                            
+                            <div class="detail-group">
+                                <div class="detail-label">Location</div>
+                                <div class="detail-value">
+                                    ${ad.specific_location || ''} ${ad.district ? `, ${ad.district}` : ''} ${ad.region ? `, ${ad.region}` : ''}
+                                    ${ad.latitude && ad.longitude ? `<br>Coordinates: ${ad.latitude}, ${ad.longitude}` : ''}
+                                </div>
+                            </div>
+                            
+                            ${imagesHtml}
+                        </div>
+                        
+                        <div>
+                            <div class="user-info-card">
+                                <h4 style="margin-bottom: 12px;">Seller Information</h4>
+                                <div class="detail-group">
+                                    <div class="detail-label">Name</div>
+                                    <div class="detail-value">
+                                        ${ad.profiles?.full_name || 'N/A'}
+                                        ${ad.profiles?.is_verified ? '<span style="color: var(--secondary); margin-left: 8px;"><i class="fas fa-check-circle"></i> Verified</span>' : ''}
+                                    </div>
+                                </div>
+                                
+                                <div class="detail-group">
+                                    <div class="detail-label">Email</div>
+                                    <div class="detail-value">${ad.profiles?.email || 'N/A'}</div>
+                                </div>
+                                
+                                <div class="detail-group">
+                                    <div class="detail-label">Phone</div>
+                                    <div class="detail-value">${ad.profiles?.phone || 'N/A'}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-group">
+                                <div class="detail-label">Status</div>
+                                <div class="detail-value">
+                                    <span class="status-badge ${ad.status}">
+                                        ${ad.status.charAt(0).toUpperCase() + ad.status.slice(1)}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-group">
+                                <div class="detail-label">Contact Information</div>
+                                <div class="detail-value">
+                                    Phone: ${ad.contact_phone || 'Not provided'}<br>
+                                    WhatsApp: ${ad.contact_whatsapp || 'Not provided'}<br>
+                                    Show Profile Phone: ${ad.show_profile_phone ? 'Yes' : 'No'}
+                                </div>
+                            </div>
+                            
+                            <div class="detail-group">
+                                <div class="detail-label">Dates</div>
+                                <div class="detail-value">
+                                    Created: ${createdDate}<br>
+                                    Updated: ${updatedDate}<br>
+                                    Expires: ${expiresDate}
+                                    ${ad.featured_until ? `<br>Featured Until: ${new Date(ad.featured_until).toLocaleDateString()}` : ''}
+                                    ${ad.boost_until ? `<br>Boosted Until: ${new Date(ad.boost_until).toLocaleDateString()}` : ''}
+                                </div>
+                            </div>
+                            
+                            <div class="detail-group">
+                                <div class="detail-label">Views</div>
+                                <div class="detail-value">${ad.view_count || 0}</div>
+                            </div>
+                            
+                            ${promotionsHtml}
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 30px; display: flex; gap: 12px;">
+                        ${ad.status === 'draft' ? `
+                            <button class="btn btn-success" onclick="approveAd(${ad.id}); adDetailModal.classList.remove('active');">
+                                <i class="fas fa-check-circle"></i>
+                                Approve Ad
+                            </button>
+                        ` : ''}
+                        
+                        ${ad.status === 'active' && !ad.is_featured ? `
+                            <button class="btn btn-warning" onclick="showFeatureModal(${ad.id}); adDetailModal.classList.remove('active');">
+                                <i class="fas fa-star"></i>
+                                Feature Ad
+                            </button>
+                        ` : ''}
+                        
+                        ${ad.status !== 'banned' ? `
+                            <button class="btn btn-danger" onclick="banAd(${ad.id}); adDetailModal.classList.remove('active');">
+                                <i class="fas fa-ban"></i>
+                                Ban Ad
+                            </button>
+                        ` : ''}
+                        
+                        <button class="btn" onclick="deleteAd(${ad.id}); adDetailModal.classList.remove('active');" 
+                                style="background: var(--light-gray); color: var(--dark);">
+                            <i class="fas fa-trash"></i>
+                            Delete Ad
+                        </button>
+                    </div>
+                `;
+                
+                document.getElementById('adDetailContent').innerHTML = content;
+                adDetailModal.classList.add('active');
+                
+            } catch (error) {
+                console.error('Error loading ad details:', error);
+                showError('Failed to load ad details');
+            }
+        }
+        
+        function updatePagination() {
+            paginationInfo.textContent = `Showing ${(currentPage - 1) * itemsPerPage + 1}-${Math.min(currentPage * itemsPerPage, ads.length * currentPage)} of ${ads.length * totalPages} ads`;
+            
+            let paginationHtml = '';
+            
+            // Previous button
+            paginationHtml += `
+                <button class="pagination-btn" id="prevPageBtn" ${currentPage === 1 ? 'disabled' : ''}>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            `;
+            
+            // Page numbers
+            const maxPagesToShow = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+            let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+            
+            if (endPage - startPage + 1 < maxPagesToShow) {
+                startPage = Math.max(1, endPage - maxPagesToShow + 1);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHtml += `
+                    <button class="pagination-btn ${i === currentPage ? 'active' : ''}" data-page="${i}">
+                        ${i}
+                    </button>
+                `;
+            }
+            
+            // Next button
+            paginationHtml += `
+                <button class="pagination-btn" id="nextPageBtn" ${currentPage === totalPages ? 'disabled' : ''}>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            `;
+            
+            paginationControls.innerHTML = paginationHtml;
+            
+            // Add event listeners
+            document.getElementById('prevPageBtn')?.addEventListener('click', () => {
+                if (currentPage > 1) loadAds(currentPage - 1);
+            });
+            
+            document.getElementById('nextPageBtn')?.addEventListener('click', () => {
+                if (currentPage < totalPages) loadAds(currentPage + 1);
+            });
+            
+            document.querySelectorAll('.pagination-btn[data-page]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const page = parseInt(this.dataset.page);
+                    if (page !== currentPage) {
+                        loadAds(page);
+                    }
+                });
+            });
+        }
+        
+        function updateBulkActions() {
+            const selectedCountValue = selectedAdIds.size;
+            selectedCount.textContent = selectedCountValue;
+            
+            if (selectedCountValue > 0) {
+                bulkActions.style.display = 'flex';
+                tableSelectAll.checked = selectedCountValue === ads.length;
+                selectAllCheckbox.checked = selectedCountValue === ads.length;
+            } else {
+                bulkActions.style.display = 'none';
+                tableSelectAll.checked = false;
+                selectAllCheckbox.checked = false;
+            }
+        }
+        
+        async function approveAd(adId) {
+            showConfirmModal(
+                'Approve Ad',
+                'Are you sure you want to approve this ad? It will become visible to all users.',
+                async () => {
+                    try {
+                        const { error } = await sb
+                            .from('ads')
+                            .update({ 
+                                status: 'active',
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('id', adId);
+                        
+                        if (error) throw error;
+                        
+                        // Record admin action
+                        await recordAdminAction('ad_approved', adId, {});
+                        
+                        showSuccess('Ad approved successfully');
+                        await loadAds(currentPage);
+                        await loadStats();
+                        
+                    } catch (error) {
+                        console.error('Error approving ad:', error);
+                        showError('Failed to approve ad');
+                    }
+                }
+            );
+        }
+        
+        async function banAd(adId) {
+            showConfirmModal(
+                'Ban Ad',
+                'Are you sure you want to ban this ad? It will be hidden from all users.',
+                async () => {
+                    try {
+                        const { error } = await sb
+                            .from('ads')
+                            .update({ 
+                                status: 'banned',
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('id', adId);
+                        
+                        if (error) throw error;
+                        
+                        // Record admin action
+                        await recordAdminAction('ad_banned', adId, {});
+                        
+                        showSuccess('Ad banned successfully');
+                        await loadAds(currentPage);
+                        await loadStats();
+                        
+                    } catch (error) {
+                        console.error('Error banning ad:', error);
+                        showError('Failed to ban ad');
+                    }
+                }
+            );
+        }
+        
+        async function deleteAd(adId) {
+            showConfirmModal(
+                'Delete Ad',
+                'Are you sure you want to delete this ad? This action cannot be undone.',
+                async () => {
+                    try {
+                        const { error } = await sb
+                            .from('ads')
+                            .delete()
+                            .eq('id', adId);
+                        
+                        if (error) throw error;
+                        
+                        // Record admin action
+                        await recordAdminAction('ad_deleted', adId, {});
+                        
+                        showSuccess('Ad deleted successfully');
+                        await loadAds(currentPage);
+                        await loadStats();
+                        
+                    } catch (error) {
+                        console.error('Error deleting ad:', error);
+                        showError('Failed to delete ad');
+                    }
+                }
+            );
+        }
+        
+        function showFeatureModal(adId) {
+            currentAd = { id: adId };
+            featureDuration.value = '7';
+            customDateGroup.style.display = 'none';
+            customFeatureDate.value = '';
+            document.getElementById('featureNotes').value = '';
+            featureModal.classList.add('active');
+        }
+        
+        async function featureAd(adId, days, notes) {
+            try {
+                const endsAt = new Date();
+                endsAt.setDate(endsAt.getDate() + days);
+                
+                const { error } = await sb
+                    .from('ads')
+                    .update({ 
+                        is_featured: true,
+                        featured_until: endsAt.toISOString(),
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', adId);
+                
+                if (error) throw error;
+                
+                // Record admin action
+                await recordAdminAction('ad_featured', adId, {
+                    duration_days: days,
+                    ends_at: endsAt.toISOString(),
+                    notes: notes
+                });
+                
+                showSuccess(`Ad featured for ${days} days`);
+                await loadAds(currentPage);
+                await loadStats();
+                
+            } catch (error) {
+                console.error('Error featuring ad:', error);
+                showError('Failed to feature ad');
+            }
+        }
+        
+        async function bulkApproveAds() {
+            if (selectedAdIds.size === 0) return;
+            
+            showConfirmModal(
+                'Approve Selected Ads',
+                `Are you sure you want to approve ${selectedAdIds.size} ads?`,
+                async () => {
+                    try {
+                        const adIds = Array.from(selectedAdIds);
+                        
+                        const { error } = await sb
+                            .from('ads')
+                            .update({ 
+                                status: 'active',
+                                updated_at: new Date().toISOString()
+                            })
+                            .in('id', adIds);
+                        
+                        if (error) throw error;
+                        
+                        // Record admin actions
+                        for (const adId of adIds) {
+                            await recordAdminAction('ad_approved', adId, { bulk: true });
+                        }
+                        
+                        showSuccess(`${adIds.length} ads approved successfully`);
+                        selectedAdIds.clear();
+                        await loadAds(currentPage);
+                        await loadStats();
+                        
+                    } catch (error) {
+                        console.error('Error bulk approving ads:', error);
+                        showError('Failed to approve ads');
+                    }
+                }
+            );
+        }
+        
+        async function bulkDeleteAds() {
+            if (selectedAdIds.size === 0) return;
+            
+            showConfirmModal(
+                'Delete Selected Ads',
+                `Are you sure you want to delete ${selectedAdIds.size} ads? This action cannot be undone.`,
+                async () => {
+                    try {
+                        const adIds = Array.from(selectedAdIds);
+                        
+                        const { error } = await sb
+                            .from('ads')
+                            .delete()
+                            .in('id', adIds);
+                        
+                        if (error) throw error;
+                        
+                        // Record admin actions
+                        for (const adId of adIds) {
+                            await recordAdminAction('ad_deleted', adId, { bulk: true });
+                        }
+                        
+                        showSuccess(`${adIds.length} ads deleted successfully`);
+                        selectedAdIds.clear();
+                        await loadAds(currentPage);
+                        await loadStats();
+                        
+                    } catch (error) {
+                        console.error('Error bulk deleting ads:', error);
+                        showError('Failed to delete ads');
+                    }
+                }
+            );
+        }
+        
+        function showConfirmModal(title, message, action) {
+            document.getElementById('confirmModalTitle').textContent = title;
+            document.getElementById('confirmModalMessage').textContent = message;
+            document.getElementById('confirmModalDetails').innerHTML = '';
+            
+            const confirmBtn = document.getElementById('confirmModalAction');
+            confirmBtn.onclick = action;
+            
+            confirmModal.classList.add('active');
+        }
+        
+        async function recordAdminAction(actionType, targetAdId, details) {
+            try {
+                await sb
+                    .from('admin_actions')
+                    .insert({
+                        admin_id: currentAdmin.id,
+                        action_type: actionType,
+                        target_ad_id: targetAdId,
+                        details: details,
+                        performed_at: new Date().toISOString()
+                    });
+            } catch (error) {
+                console.warn('Failed to record admin action:', error);
+            }
+        }
+        
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+            
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+        
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+            
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 5000);
+        }
+        
+        function setupEventListeners() {
+            // Filters
+            applyFiltersBtn.addEventListener('click', () => {
+                currentFilters = {
+                    status: statusFilter.value || null,
+                    category_id: categoryFilter.value || null,
+                    region: regionFilter.value || null,
+                    search: searchFilter.value.trim() || null
+                };
+                
+                // Parse date range
+                if (dateRangeFilter.value) {
+                    const dates = dateRangeFilter.value.split(' to ');
+                    if (dates.length === 2) {
+                        currentFilters.date_from = dates[0] + 'T00:00:00Z';
+                        currentFilters.date_to = dates[1] + 'T23:59:59Z';
+                    }
+                }
+                
+                loadAds(1);
+            });
+            
+            clearFiltersBtn.addEventListener('click', () => {
+                statusFilter.value = '';
+                categoryFilter.value = '';
+                regionFilter.value = '';
+                dateRangeFilter.value = '';
+                searchFilter.value = '';
+                currentFilters = {};
+                loadAds(1);
+            });
+            
+            // Search on enter
+            searchFilter.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    applyFiltersBtn.click();
+                }
+            });
+            
+            // Select all checkboxes
+            tableSelectAll.addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.ad-checkbox');
+                checkboxes.forEach(cb => {
+                    cb.checked = this.checked;
+                    if (this.checked) {
+                        selectedAdIds.add(cb.value);
+                    } else {
+                        selectedAdIds.delete(cb.value);
+                    }
+                });
+                updateBulkActions();
+            });
+            
+            selectAllCheckbox.addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.ad-checkbox');
+                checkboxes.forEach(cb => {
+                    cb.checked = this.checked;
+                    if (this.checked) {
+                        selectedAdIds.add(cb.value);
+                    } else {
+                        selectedAdIds.delete(cb.value);
+                    }
+                });
+                updateBulkActions();
+            });
+            
+            // Quick actions
+            refreshBtn.addEventListener('click', () => {
+                loadAds(currentPage);
+                loadStats();
+            });
+            
+            expiringBtn.addEventListener('click', () => {
+                // Show ads expiring in next 3 days
+                const threeDaysFromNow = new Date();
+                threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
+                
+                statusFilter.value = 'active';
+                dateRangeFilter.value = new Date().toISOString().split('T')[0] + ' to ' + threeDaysFromNow.toISOString().split('T')[0];
+                applyFiltersBtn.click();
+            });
+            
+            featuredBtn.addEventListener('click', () => {
+                // Show only featured ads
+                searchFilter.value = 'featured:true';
+                applyFiltersBtn.click();
+            });
+            
+            // Bulk actions
+            bulkApproveBtn.addEventListener('click', bulkApproveAds);
+            bulkDeleteBtn.addEventListener('click', bulkDeleteAds);
+            
+            bulkFeatureBtn.addEventListener('click', () => {
+                if (selectedAdIds.size === 0) return;
+                showFeatureModal();
+            });
+            
+            // Modal controls
+            closeAdDetailModal.addEventListener('click', () => {
+                adDetailModal.classList.remove('active');
+            });
+            
+            closeConfirmModal.addEventListener('click', () => {
+                confirmModal.classList.remove('active');
+            });
+            
+            closeFeatureModal.addEventListener('click', () => {
+                featureModal.classList.remove('active');
+            });
+            
+            confirmModalCancel.addEventListener('click', () => {
+                confirmModal.classList.remove('active');
+            });
+            
+            cancelFeatureBtn.addEventListener('click', () => {
+                featureModal.classList.remove('active');
+            });
+            
+            // Feature duration change
+            featureDuration.addEventListener('change', function() {
+                customDateGroup.style.display = this.value === 'custom' ? 'block' : 'none';
+            });
+            
+            // Confirm feature
+            confirmFeatureBtn.addEventListener('click', async () => {
+                let days = parseInt(featureDuration.value);
+                
+                if (featureDuration.value === 'custom' && customFeatureDate.value) {
+                    const endDate = new Date(customFeatureDate.value);
+                    const today = new Date();
+                    days = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+                }
+                
+                if (days <= 0) {
+                    showError('Please select a valid end date');
+                    return;
+                }
+                
+                const notes = document.getElementById('featureNotes').value;
+                
+                if (selectedAdIds.size > 0) {
+                    // Bulk feature
+                    try {
+                        const adIds = Array.from(selectedAdIds);
+                        const endsAt = new Date();
+                        endsAt.setDate(endsAt.getDate() + days);
+                        
+                        for (const adId of adIds) {
+                            await sb
+                                .from('ads')
+                                .update({ 
+                                    is_featured: true,
+                                    featured_until: endsAt.toISOString(),
+                                    updated_at: new Date().toISOString()
+                                })
+                                .eq('id', adId);
+                            
+                            await recordAdminAction('ad_featured', adId, {
+                                duration_days: days,
+                                ends_at: endsAt.toISOString(),
+                                notes: notes,
+                                bulk: true
+                            });
+                        }
+                        
+                        showSuccess(`${adIds.length} ads featured for ${days} days`);
+                        selectedAdIds.clear();
+                        featureModal.classList.remove('active');
+                        await loadAds(currentPage);
+                        await loadStats();
+                        
+                    } catch (error) {
+                        console.error('Error bulk featuring ads:', error);
+                        showError('Failed to feature ads');
+                    }
+                } else if (currentAd?.id) {
+                    // Single feature
+                    featureModal.classList.remove('active');
+                    await featureAd(currentAd.id, days, notes);
+                }
+            });
+            
+            // Close modals on background click
+            [adDetailModal, confirmModal, featureModal].forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.classList.remove('active');
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>

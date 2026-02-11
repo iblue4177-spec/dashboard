@@ -1,0 +1,2661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>iBlue Uganda - Spotlight Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary: #3B82F6;
+            --primary-dark: #2563EB;
+            --secondary: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --light: #F9FAFB;
+            --dark: #1F2937;
+            --gray: #6B7280;
+            --gray-light: #E5E7EB;
+            --border-radius: 8px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-lg: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--dark);
+            background: var(--light);
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            width: 100%;
+            padding: 0 12px;
+            max-width: 100%;
+        }
+        
+        .admin-header {
+            background: white;
+            border-bottom: 1px solid var(--gray-light);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 12px 0;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            color: var(--primary);
+        }
+        
+        .logo i {
+            font-size: 20px;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .notification-badge {
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+        }
+        
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .menu-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+        
+        .menu-line {
+            width: 20px;
+            height: 2px;
+            background: var(--dark);
+            transition: 0.3s;
+        }
+        
+        .menu-btn.active .menu-line:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+        
+        .menu-btn.active .menu-line:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .menu-btn.active .menu-line:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100vh;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1001;
+            transition: left 0.3s ease;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .sidebar.active {
+            left: 0;
+        }
+        
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+        }
+        
+        .sidebar-overlay.active {
+            display: block;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--gray-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .sidebar-nav {
+            padding: 16px 0;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            color: var(--dark);
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        
+        .nav-item:hover,
+        .nav-item.active {
+            background: #EFF6FF;
+            color: var(--primary);
+        }
+        
+        .nav-item i {
+            width: 24px;
+            margin-right: 12px;
+            font-size: 16px;
+        }
+        
+        .main-content {
+            padding: 16px 0 80px;
+            min-height: calc(100vh - 120px);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: var(--border-radius);
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        
+        .section-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--gray-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .section-title {
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .section-title i {
+            color: var(--primary);
+        }
+        
+        .section-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+        
+        .btn-secondary {
+            background: var(--gray-light);
+            color: var(--dark);
+        }
+        
+        .btn-secondary:hover {
+            background: #D1D5DB;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #DC2626;
+        }
+        
+        .btn-success {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            justify-content: center;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+        
+        .table th {
+            background: #F9FAFB;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--gray);
+            border-bottom: 1px solid var(--gray-light);
+        }
+        
+        .table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--gray-light);
+            vertical-align: middle;
+        }
+        
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+        
+        .status-pending {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+        
+        .status-expired {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+        
+        .status-expiring {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--gray-light);
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            transition: border-color 0.2s;
+            background: white;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .select-wrapper {
+            position: relative;
+        }
+        
+        .select-wrapper select {
+            appearance: none;
+            padding-right: 40px;
+        }
+        
+        .select-arrow {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: var(--gray);
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: var(--border-radius);
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            animation: modalSlideUp 0.3s ease;
+        }
+        
+        @keyframes modalSlideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--gray-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--gray);
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .modal-close:hover {
+            background: var(--gray-light);
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid var(--gray-light);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        
+        .spotlight-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .type-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 16px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .type-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .type-card.selected {
+            border-color: var(--primary);
+            background: #EFF6FF;
+        }
+        
+        .type-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+        
+        .type-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .type-price {
+            font-size: 12px;
+            color: var(--gray);
+        }
+        
+        .ads-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 12px;
+        }
+        
+        .ad-card {
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s;
+        }
+        
+        .ad-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .ad-image {
+            width: 100%;
+            height: 160px;
+            background: #F3F4F6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray);
+            font-size: 48px;
+        }
+        
+        .ad-content {
+            padding: 16px;
+        }
+        
+        .ad-title {
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .ad-price {
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        
+        .ad-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--gray);
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid var(--gray-light);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            z-index: 999;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .nav-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 12px;
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 11px;
+            flex: 1;
+            border: none;
+            background: none;
+            cursor: pointer;
+        }
+        
+        .nav-tab.active {
+            color: var(--primary);
+        }
+        
+        .nav-tab i {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray);
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: var(--gray-light);
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--gray-light);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 20px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .login-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--primary);
+        }
+        
+        .error-message {
+            background: #FEE2E2;
+            color: #991B1B;
+            padding: 12px;
+            border-radius: var(--border-radius);
+            margin-bottom: 16px;
+            display: none;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        .success-message {
+            background: #D1FAE5;
+            color: #065F46;
+            padding: 12px;
+            border-radius: var(--border-radius);
+            margin-bottom: 16px;
+            display: none;
+        }
+        
+        .success-message.show {
+            display: block;
+        }
+        
+        @media (min-width: 768px) {
+            .container {
+                padding: 0 20px;
+            }
+            
+            .bottom-nav {
+                display: none;
+            }
+            
+            .sidebar {
+                position: sticky;
+                top: 0;
+                left: 0;
+                width: 240px;
+                height: 100vh;
+                box-shadow: none;
+                border-right: 1px solid var(--gray-light);
+            }
+            
+            .sidebar-overlay {
+                display: none !important;
+            }
+            
+            .main-wrapper {
+                display: flex;
+            }
+            
+            .main-content {
+                flex: 1;
+                padding: 24px;
+            }
+            
+            .menu-btn {
+                display: none;
+            }
+        }
+        
+        button, .btn, .nav-item {
+            touch-action: manipulation;
+        }
+        
+        input, select, textarea {
+            font-size: 16px;
+        }
+        
+        .table-container::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .table-container {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .btn-group .btn {
+            border-radius: var(--border-radius);
+        }
+        
+        .btn-group .btn.active {
+            background: var(--primary);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginPage" class="page" style="display: none;">
+        <div class="login-container">
+            <h2 class="login-title">
+                <i class="fas fa-lock"></i>
+                Admin Login
+            </h2>
+            
+            <div id="loginError" class="error-message"></div>
+            <div id="loginSuccess" class="success-message"></div>
+            
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" id="loginEmail" placeholder="admin@example.com">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-control" id="loginPassword" placeholder="••••••••">
+            </div>
+            
+            <button class="btn btn-primary" id="loginBtn" style="width: 100%; margin-top: 20px;">
+                <i class="fas fa-sign-in-alt"></i>
+                Login
+            </button>
+            
+            <div style="text-align: center; margin-top: 20px; color: var(--gray); font-size: 12px;">
+                <i class="fas fa-shield-alt"></i>
+                Admin access only
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Interface -->
+    <div id="adminInterface" style="display: none;">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="container">
+                <div class="header-content">
+                    <button class="menu-btn" id="menuToggle">
+                        <span class="menu-line"></span>
+                        <span class="menu-line"></span>
+                        <span class="menu-line"></span>
+                    </button>
+                    
+                    <div class="logo">
+                        <i class="fas fa-bullhorn"></i>
+                        <span>iBlue Spotlight Admin</span>
+                    </div>
+                    
+                    <div class="user-menu">
+                        <div class="notification-badge" id="notificationCount" style="display: none;">0</div>
+                        <div class="avatar" id="userAvatar">A</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Wrapper -->
+        <div class="main-wrapper">
+            <!-- Sidebar -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <h3>Admin Menu</h3>
+                    <button class="menu-btn active" id="closeMenu">
+                        <span class="menu-line"></span>
+                        <span class="menu-line"></span>
+                        <span class="menu-line"></span>
+                    </button>
+                </div>
+                
+                <nav class="sidebar-nav">
+                    <a href="#" class="nav-item active" data-page="dashboard">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="spotlights">
+                        <i class="fas fa-star"></i>
+                        <span>Active Spotlights</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="addSpotlight">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Add Spotlight</span>
+                    </a>
+                    </a>
+                    <a href="admin-ads.html" class="nav-item" data-page="addSpotlight">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Manage-ads</span>
+                    </a>
+                </a>
+                    <a href="admin-pricing.html" class="nav-item" data-page="addSpotlight">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Manage-pricing</span>
+                    </a>
+            </a>
+                    <a href="admin-users.html" class="nav-item" data-page="addSpotlight">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Manage-users</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="requests">
+                        <i class="fas fa-inbox"></i>
+                        <span>Requests</span>
+                        <span class="notification-badge" id="sidebarRequestCount" style="margin-left: auto; display: none;">0</span>
+                    </a>
+                    <div style="padding: 20px; margin-top: auto;">
+                        <button class="btn btn-secondary" style="width: 100%;" id="logoutBtn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Logout
+                        </button>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="container">
+                    <!-- Dashboard Page -->
+                    <div class="page active" id="page-dashboard">
+                        <div class="stats-grid" id="statsGrid">
+                            <!-- Stats will be loaded here -->
+                        </div>
+                        
+                        <div class="section">
+                            <div class="section-header">
+                                <h3 class="section-title">
+                                    <i class="fas fa-fire"></i>
+                                    Trending Ads for Featuring
+                                </h3>
+                                <div class="section-actions">
+                                    <button class="btn btn-primary btn-sm" id="refreshTrending">
+                                        <i class="fas fa-sync-alt"></i>
+                                        Refresh
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <div id="trendingAds">
+                                    <div style="text-align: center; padding: 40px;">
+                                        <div class="loading"></div>
+                                        <p style="margin-top: 12px; color: var(--gray);">Loading trending ads...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <div class="section-header">
+                                <h3 class="section-title">
+                                    <i class="fas fa-clock"></i>
+                                    Expiring Soon (Next 2 Days)
+                                </h3>
+                            </div>
+                            <div class="table-container">
+                                <div id="expiringSpotlights">
+                                    <div style="text-align: center; padding: 40px;">
+                                        <div class="loading"></div>
+                                        <p style="margin-top: 12px; color: var(--gray);">Loading expiring spotlights...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Spotlights Page -->
+                    <div class="page" id="page-spotlights">
+                        <div class="section">
+                            <div class="section-header">
+                                <h3 class="section-title">
+                                    <i class="fas fa-star"></i>
+                                    Active Spotlights
+                                </h3>
+                                <div class="section-actions">
+                                    <div class="btn-group">
+                                        <button class="btn btn-secondary btn-sm active" id="filterAll">All</button>
+                                        <button class="btn btn-secondary btn-sm" id="filterActive">Active</button>
+                                        <button class="btn btn-secondary btn-sm" id="filterExpiring">Expiring</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <div id="spotlightsTableContainer">
+                                    <div style="text-align: center; padding: 40px;">
+                                        <div class="loading"></div>
+                                        <p style="margin-top: 12px; color: var(--gray);">Loading spotlights...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add Spotlight Page -->
+                    <div class="page" id="page-addSpotlight">
+                        <div class="section">
+                            <div class="section-header">
+                                <h3 class="section-title">
+                                    <i class="fas fa-plus-circle"></i>
+                                    Add New Spotlight
+                                </h3>
+                            </div>
+                            <div class="section-body" style="padding: 20px;">
+                                <div id="searchSection">
+                                    <div class="form-group">
+                                        <label class="form-label">Search Ads</label>
+                                        <div style="display: flex; gap: 8px;">
+                                            <input type="text" class="form-control" id="searchAds" placeholder="Search by title, seller, or description">
+                                            <button class="btn btn-primary" id="searchBtn">
+                                                <i class="fas fa-search"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="spotlight-types" id="spotlightTypes">
+                                        <!-- Spotlight types will be loaded here -->
+                                    </div>
+                                    
+                                    <div id="searchResults">
+                                        <div style="text-align: center; padding: 40px; color: var(--gray);">
+                                            <i class="fas fa-search fa-2x" style="margin-bottom: 12px;"></i>
+                                            <p>Enter search terms to find ads for featuring</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Requests Page -->
+                    <div class="page" id="page-requests">
+                        <div class="section">
+                            <div class="section-header">
+                                <h3 class="section-title">
+                                    <i class="fas fa-inbox"></i>
+                                    Pending Spotlight Requests
+                                </h3>
+                                <div class="section-actions">
+                                    <button class="btn btn-primary btn-sm" id="refreshRequests">
+                                        <i class="fas fa-sync-alt"></i>
+                                        Refresh
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <div id="pendingRequests">
+                                    <div style="text-align: center; padding: 40px;">
+                                        <div class="loading"></div>
+                                        <p style="margin-top: 12px; color: var(--gray);">Loading requests...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Bottom Navigation (Mobile Only) -->
+        <nav class="bottom-nav">
+            <button class="nav-tab active" data-page="dashboard">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </button>
+            <button class="nav-tab" data-page="spotlights">
+                <i class="fas fa-star"></i>
+                <span>Spotlights</span>
+            </button>
+            <button class="nav-tab" data-page="addSpotlight">
+                <i class="fas fa-plus"></i>
+                <span>Add</span>
+            </button>
+            <button class="nav-tab" data-page="requests">
+                <i class="fas fa-inbox"></i>
+                <span>Requests</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal" id="addSpotlightModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add to Spotlight</h3>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="modalError" class="error-message" style="display: none;"></div>
+                
+                <div class="form-group">
+                    <label class="form-label">Selected Ad</label>
+                    <div class="selected-ad" id="selectedAdInfo" style="background: #F9FAFB; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                        <!-- Ad info will appear here -->
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Spotlight Type</label>
+                    <div class="select-wrapper">
+                        <select class="form-control" id="spotlightTypeSelect">
+                            <option value="">Select a type</option>
+                            <!-- Options will be populated -->
+                        </select>
+                        <i class="fas fa-chevron-down select-arrow"></i>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Display Order</label>
+                    <input type="number" class="form-control" id="displayOrder" min="0" value="0">
+                    <small style="color: var(--gray); font-size: 12px;">Lower numbers appear first</small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Duration (Days)</label>
+                    <input type="number" class="form-control" id="placementDays" min="1" max="30" value="7">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Price Paid (UGX)</label>
+                    <input type="number" class="form-control" id="pricePaid" min="0" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelModal">Cancel</button>
+                <button class="btn btn-primary" id="confirmAdd">
+                    <i class="fas fa-plus"></i>
+                    Add to Spotlight
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="actionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="actionModalTitle">Confirm Action</h3>
+                <button class="modal-close" id="closeActionModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="actionModalMessage">Are you sure you want to perform this action?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelAction">Cancel</button>
+                <button class="btn" id="confirmAction">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // IMPORTANT: Replace these with your actual Supabase credentials
+        const SUPABASE_URL = 'https://uufhvmmgwzkxvvdbqemz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1Zmh2bW1nd3preHZ2ZGJxZW16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMDIzNTYsImV4cCI6MjA4NTg3ODM1Nn0.WABHx4ilFRkhPHP-y4ZC4E8Kb7PRqY-cyxI8cVS8Tyc';
+        
+        // Initialize Supabase
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // State
+        let currentUser = null;
+        let currentPage = 'dashboard';
+        let selectedAd = null;
+        let selectedSpotlightType = null;
+        let currentAction = null;
+        let currentSpotlightId = null;
+        let currentRequestId = null;
+        
+        // DOM Elements
+        const loginPage = document.getElementById('loginPage');
+        const adminInterface = document.getElementById('adminInterface');
+        const menuToggle = document.getElementById('menuToggle');
+        const closeMenu = document.getElementById('closeMenu');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const pages = document.querySelectorAll('.page');
+        const navItems = document.querySelectorAll('.nav-item');
+        const bottomNavTabs = document.querySelectorAll('.nav-tab');
+        const addSpotlightModal = document.getElementById('addSpotlightModal');
+        const actionModal = document.getElementById('actionModal');
+        
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', async function() {
+            await checkAuth();
+            if (currentUser) {
+                initializeAdminInterface();
+                loadDashboard();
+                loadSpotlightTypes();
+            }
+        });
+        
+        // Check authentication
+        async function checkAuth() {
+            try {
+                const { data: { session } } = await sb.auth.getSession();
+                
+                if (!session) {
+                    showLoginPage();
+                    return;
+                }
+                
+                // Check if user is admin
+                const { data: profile, error } = await sb
+                    .from('profiles')
+                    .select('id, full_name, email, is_admin')
+                    .eq('id', session.user.id)
+                    .single();
+                
+                if (error) {
+                    console.error('Error fetching profile:', error);
+                    showLoginPage();
+                    return;
+                }
+                
+                if (!profile.is_admin) {
+                    alert('Access denied. Admin privileges required.');
+                    await sb.auth.signOut();
+                    showLoginPage();
+                    return;
+                }
+                
+                currentUser = {
+                    id: profile.id,
+                    name: profile.full_name || profile.email,
+                    email: profile.email,
+                    initials: (profile.full_name || 'A').charAt(0).toUpperCase()
+                };
+                
+                showAdminInterface();
+                
+            } catch (error) {
+                console.error('Auth check error:', error);
+                showLoginPage();
+            }
+        }
+        
+        function showLoginPage() {
+            loginPage.style.display = 'block';
+            adminInterface.style.display = 'none';
+            
+            // Setup login handler
+            document.getElementById('loginBtn').onclick = handleLogin;
+            
+            // Enter key to login
+            document.getElementById('loginPassword').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') handleLogin();
+            });
+        }
+        
+        function showAdminInterface() {
+            loginPage.style.display = 'none';
+            adminInterface.style.display = 'block';
+            
+            // Update user avatar
+            document.getElementById('userAvatar').textContent = currentUser.initials;
+        }
+        
+        async function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            errorDiv.textContent = '';
+            errorDiv.classList.remove('show');
+            
+            if (!email || !password) {
+                errorDiv.textContent = 'Please enter both email and password';
+                errorDiv.classList.add('show');
+                return;
+            }
+            
+            const loginBtn = document.getElementById('loginBtn');
+            const originalText = loginBtn.innerHTML;
+            loginBtn.innerHTML = '<div class="loading" style="width: 16px; height: 16px;"></div>';
+            loginBtn.disabled = true;
+            
+            try {
+                const { data, error } = await sb.auth.signInWithPassword({
+                    email,
+                    password
+                });
+                
+                if (error) throw error;
+                
+                // Check if admin
+                const { data: profile } = await sb
+                    .from('profiles')
+                    .select('is_admin')
+                    .eq('id', data.user.id)
+                    .single();
+                
+                if (!profile?.is_admin) {
+                    await sb.auth.signOut();
+                    throw new Error('Admin access required');
+                }
+                
+                location.reload();
+                
+            } catch (error) {
+                errorDiv.textContent = error.message || 'Login failed';
+                errorDiv.classList.add('show');
+                loginBtn.innerHTML = originalText;
+                loginBtn.disabled = false;
+            }
+        }
+        
+        function initializeAdminInterface() {
+            // Menu Toggle
+            menuToggle.addEventListener('click', toggleSidebar);
+            closeMenu.addEventListener('click', toggleSidebar);
+            sidebarOverlay.addEventListener('click', toggleSidebar);
+            
+            // Navigation
+            navItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = this.dataset.page;
+                    navigateTo(page);
+                    if (window.innerWidth < 768) {
+                        toggleSidebar();
+                    }
+                });
+            });
+            
+            // Bottom Navigation
+            bottomNavTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const page = this.dataset.page;
+                    navigateTo(page);
+                });
+            });
+            
+            // Modal Events
+            document.getElementById('closeModal').addEventListener('click', closeAddModal);
+            document.getElementById('cancelModal').addEventListener('click', closeAddModal);
+            document.getElementById('closeActionModal').addEventListener('click', closeActionModal);
+            document.getElementById('cancelAction').addEventListener('click', closeActionModal);
+            
+            // Search
+            document.getElementById('searchBtn').addEventListener('click', searchAds);
+            document.getElementById('searchAds').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') searchAds();
+            });
+            
+            // Refresh buttons
+            document.getElementById('refreshTrending').addEventListener('click', loadTrendingAds);
+            document.getElementById('refreshRequests').addEventListener('click', loadRequests);
+            
+            // Filter buttons
+            document.getElementById('filterAll').addEventListener('click', () => loadSpotlights('all'));
+            document.getElementById('filterActive').addEventListener('click', () => loadSpotlights('active'));
+            document.getElementById('filterExpiring').addEventListener('click', () => loadSpotlights('expiring'));
+            
+            // Confirm Add Spotlight
+            document.getElementById('confirmAdd').addEventListener('click', confirmAddSpotlight);
+            
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+            
+            // Action modal confirm
+            document.getElementById('confirmAction').addEventListener('click', handleActionConfirm);
+        }
+        
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+            menuToggle.classList.toggle('active');
+        }
+        
+        function navigateTo(page) {
+            // Update current page
+            currentPage = page;
+            
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            
+            // Show target page
+            document.getElementById(`page-${page}`).classList.add('active');
+            
+            // Update navigation active states
+            navItems.forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.page === page) {
+                    item.classList.add('active');
+                }
+            });
+            
+            bottomNavTabs.forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.dataset.page === page) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            // Load page-specific data
+            switch(page) {
+                case 'dashboard':
+                    loadDashboard();
+                    break;
+                case 'spotlights':
+                    loadSpotlights();
+                    break;
+                case 'addSpotlight':
+                    // Types already loaded
+                    break;
+                case 'requests':
+                    loadRequests();
+                    break;
+            }
+        }
+        
+        async function loadDashboard() {
+            try {
+                // Load stats using the function
+                const { data: stats, error: statsError } = await sb
+                    .rpc('get_admin_dashboard_stats');
+                
+                if (statsError) {
+                    console.error('Stats error:', statsError);
+                    // Fallback to manual query if function fails
+                    await loadStatsManually();
+                } else {
+                    displayStats(stats[0]);
+                }
+                
+                // Load trending ads
+                await loadTrendingAds();
+                
+                // Load expiring spotlights
+                await loadExpiringSpotlights();
+                
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                showError('Failed to load dashboard data');
+            }
+        }
+        
+        async function loadStatsManually() {
+            try {
+                // Get active spotlights count
+                const { count: totalSpotlights } = await sb
+                    .from('homepage_spotlights')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('is_active', true)
+                    .gt('ends_at', new Date().toISOString());
+                
+                // Get expiring soon count (next 2 days)
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 2);
+                
+                const { count: expiringSoon } = await sb
+                    .from('homepage_spotlights')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('is_active', true)
+                    .gt('ends_at', new Date().toISOString())
+                    .lt('ends_at', tomorrow.toISOString());
+                
+                // Get monthly revenue
+                const startOfMonth = new Date();
+                startOfMonth.setDate(1);
+                startOfMonth.setHours(0, 0, 0, 0);
+                
+                const { data: revenueData } = await sb
+                    .from('homepage_spotlights')
+                    .select('price_paid')
+                    .gte('added_at', startOfMonth.toISOString())
+                    .eq('is_active', true);
+                
+                const totalRevenue = revenueData?.reduce((sum, item) => sum + (item.price_paid || 0), 0) || 0;
+                
+                // Get pending requests count
+                const { count: pendingRequests } = await sb
+                    .from('spotlight_requests')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('status', 'pending');
+                
+                displayStats({
+                    total_spotlights: totalSpotlights || 0,
+                    expiring_soon: expiringSoon || 0,
+                    total_revenue: totalRevenue || 0,
+                    pending_requests: pendingRequests || 0
+                });
+                
+            } catch (error) {
+                console.error('Error loading manual stats:', error);
+                // Display zero stats
+                displayStats({
+                    total_spotlights: 0,
+                    expiring_soon: 0,
+                    total_revenue: 0,
+                    pending_requests: 0
+                });
+            }
+        }
+        
+        function displayStats(stats) {
+            const statsGrid = document.getElementById('statsGrid');
+            if (stats) {
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.total_spotlights || 0}</div>
+                        <div class="stat-label">Active Spotlights</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.expiring_soon || 0}</div>
+                        <div class="stat-label">Expiring Soon</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">UGX ${Math.round(stats.total_revenue || 0).toLocaleString()}</div>
+                        <div class="stat-label">Monthly Revenue</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.pending_requests || 0}</div>
+                        <div class="stat-label">Pending Requests</div>
+                    </div>
+                `;
+                
+                // Update notification count
+                const notificationCount = stats.pending_requests || 0;
+                const notificationBadge = document.getElementById('notificationCount');
+                const sidebarBadge = document.getElementById('sidebarRequestCount');
+                
+                if (notificationCount > 0) {
+                    notificationBadge.textContent = notificationCount;
+                    notificationBadge.style.display = 'flex';
+                    sidebarBadge.textContent = notificationCount;
+                    sidebarBadge.style.display = 'flex';
+                } else {
+                    notificationBadge.style.display = 'none';
+                    sidebarBadge.style.display = 'none';
+                }
+            }
+        }
+        
+        async function loadTrendingAds() {
+            const container = document.getElementById('trendingAds');
+            
+            try {
+                // Get top 10 ads by view count with SPECIFIED foreign key relationship
+                const { data: ads, error } = await sb
+                    .from('ads')
+                    .select(`
+                        id,
+                        title,
+                        price,
+                        currency,
+                        view_count,
+                        created_at,
+                        seller_id,
+                        profiles!ads_seller_id_fkey(full_name, is_verified),
+                        categories!ads_category_id_fkey(name)  // SPECIFY which foreign key to use
+                    `)
+                    .eq('status', 'active')
+                    .order('view_count', { ascending: false })
+                    .limit(10);
+                
+                if (error) throw error;
+                
+                if (!ads || ads.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-search"></i>
+                            <p>No trending ads found</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Ad Title</th>
+                                <th>Price</th>
+                                <th>Views</th>
+                                <th>Seller</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                ads.forEach(ad => {
+                    const sellerName = ad.profiles?.full_name || 'Unknown';
+                    const category = ad.categories?.name || 'Uncategorized';
+                    const price = ad.price ? `${ad.currency || 'UGX'} ${ad.price.toLocaleString()}` : 'Free';
+                    
+                    html += `
+                        <tr>
+                            <td>
+                                <div style="font-weight: 500;">${escapeHtml(ad.title)}</div>
+                                <div style="font-size: 12px; color: var(--gray);">${escapeHtml(category)}</div>
+                            </td>
+                            <td>${price}</td>
+                            <td>${(ad.view_count || 0).toLocaleString()}</td>
+                            <td>${escapeHtml(sellerName)}</td>
+                            <td>
+                                <button class="btn btn-primary btn-sm" onclick="selectAdForSpotlight(${ad.id}, '${escapeHtml(ad.title).replace(/'/g, "\\'")}', ${ad.price || 0})">
+                                    <i class="fas fa-plus"></i>
+                                    Feature
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading trending ads:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Failed to load trending ads</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function loadExpiringSpotlights() {
+            const container = document.getElementById('expiringSpotlights');
+            
+            try {
+                // Calculate date 2 days from now
+                const twoDaysFromNow = new Date();
+                twoDaysFromNow.setDate(twoDaysFromNow.getDate() + 2);
+                
+                // Get spotlights expiring in next 2 days
+                const { data: spotlights, error } = await sb
+                    .from('homepage_spotlights')
+                    .select(`
+                        id,
+                        ad_id,
+                        spotlight_type,
+                        display_order,
+                        ends_at,
+                        ads!homepage_spotlights_ad_id_fkey(
+                            title,
+                            price,
+                            seller_id,
+                            profiles!ads_seller_id_fkey(full_name)
+                        )
+                    `)
+                    .eq('is_active', true)
+                    .gt('ends_at', new Date().toISOString())
+                    .lt('ends_at', twoDaysFromNow.toISOString())
+                    .order('ends_at', { ascending: true });
+                
+                if (error) throw error;
+                
+                if (!spotlights || spotlights.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-check-circle"></i>
+                            <p>No expiring spotlights</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Ad</th>
+                                <th>Type</th>
+                                <th>Ends In</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                spotlights.forEach(spotlight => {
+                    const endsAt = new Date(spotlight.ends_at);
+                    const now = new Date();
+                    const daysRemaining = Math.ceil((endsAt - now) / (1000 * 60 * 60 * 24));
+                    const adTitle = spotlight.ads?.title || 'Unknown Ad';
+                    const sellerName = spotlight.ads?.profiles?.full_name || 'Unknown Seller';
+                    
+                    html += `
+                        <tr>
+                            <td>
+                                <div style="font-weight: 500;">${escapeHtml(adTitle)}</div>
+                                <div style="font-size: 12px; color: var(--gray);">${escapeHtml(sellerName)}</div>
+                            </td>
+                            <td>
+                                <span class="status-badge status-expiring">
+                                    ${spotlight.spotlight_type.replace('_', ' ')}
+                                </span>
+                            </td>
+                            <td>
+                                <div>${daysRemaining} days</div>
+                                <div style="font-size: 12px; color: var(--gray);">
+                                    ${endsAt.toLocaleDateString()}
+                                </div>
+                            </td>
+                            <td>
+                                <button class="btn btn-secondary btn-sm" onclick="extendSpotlight(${spotlight.id})">
+                                    <i class="fas fa-calendar-plus"></i>
+                                    Extend
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading expiring spotlights:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Failed to load expiring spotlights</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function loadSpotlights(filter = 'all') {
+            const container = document.getElementById('spotlightsTableContainer');
+            
+            try {
+                let query = sb
+                    .from('homepage_spotlights')
+                    .select(`
+                        id,
+                        ad_id,
+                        spotlight_type,
+                        display_order,
+                        is_active,
+                        ends_at,
+                        ads!homepage_spotlights_ad_id_fkey(
+                            title,
+                            price,
+                            currency,
+                            seller_id,
+                            profiles!ads_seller_id_fkey(full_name)
+                        )
+                    `)
+                    .eq('is_active', true)
+                    .order('display_order', { ascending: true })
+                    .order('ends_at', { ascending: true });
+                
+                // Apply filter
+                if (filter === 'active') {
+                    query = query.gt('ends_at', new Date().toISOString());
+                } else if (filter === 'expiring') {
+                    const twoDaysFromNow = new Date();
+                    twoDaysFromNow.setDate(twoDaysFromNow.getDate() + 2);
+                    query = query
+                        .gt('ends_at', new Date().toISOString())
+                        .lt('ends_at', twoDaysFromNow.toISOString());
+                }
+                
+                const { data: spotlights, error } = await query;
+                
+                if (error) throw error;
+                
+                if (!spotlights || spotlights.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-star"></i>
+                            <p>No spotlights found</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Ad</th>
+                                <th>Type</th>
+                                <th>Order</th>
+                                <th>Status</th>
+                                <th>Ends</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                spotlights.forEach(spotlight => {
+                    const endsAt = new Date(spotlight.ends_at);
+                    const now = new Date();
+                    const daysRemaining = Math.ceil((endsAt - now) / (1000 * 60 * 60 * 24));
+                    const isExpired = endsAt < now;
+                    const isExpiringSoon = daysRemaining <= 2 && !isExpired;
+                    
+                    let statusClass = 'status-active';
+                    let statusText = 'Active';
+                    
+                    if (isExpired) {
+                        statusClass = 'status-expired';
+                        statusText = 'Expired';
+                    } else if (isExpiringSoon) {
+                        statusClass = 'status-expiring';
+                        statusText = 'Expiring';
+                    }
+                    
+                    const adTitle = spotlight.ads?.title || 'Unknown Ad';
+                    const sellerName = spotlight.ads?.profiles?.full_name || 'Unknown Seller';
+                    const price = spotlight.ads?.price || 0;
+                    const currency = spotlight.ads?.currency || 'UGX';
+                    
+                    html += `
+                        <tr>
+                            <td>
+                                <div style="font-weight: 500;">${escapeHtml(adTitle)}</div>
+                                <div style="font-size: 12px; color: var(--gray);">
+                                    ${currency} ${price.toLocaleString()} • ${escapeHtml(sellerName)}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status-badge" style="background: #EFF6FF; color: #1D4ED8;">
+                                    ${spotlight.spotlight_type.replace('_', ' ')}
+                                </span>
+                            </td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <button class="btn btn-sm btn-secondary" onclick="changeOrder(${spotlight.id}, ${spotlight.display_order - 1})">
+                                        <i class="fas fa-arrow-up"></i>
+                                    </button>
+                                    <span style="min-width: 20px; text-align: center;">${spotlight.display_order}</span>
+                                    <button class="btn btn-sm btn-secondary" onclick="changeOrder(${spotlight.id}, ${spotlight.display_order + 1})">
+                                        <i class="fas fa-arrow-down"></i>
+                                    </button>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status-badge ${statusClass}">${statusText}</span>
+                            </td>
+                            <td>
+                                <div>${endsAt.toLocaleDateString()}</div>
+                                <div style="font-size: 12px; color: var(--gray);">
+                                    ${isExpired ? 'Expired' : `${daysRemaining} days left`}
+                                </div>
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 4px;">
+                                    <button class="btn btn-sm btn-danger" onclick="removeSpotlight(${spotlight.id})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+                
+                // Update active filter button
+                document.querySelectorAll('#page-spotlights .btn-group .btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                const filterButton = document.getElementById(`filter${filter.charAt(0).toUpperCase() + filter.slice(1)}`);
+                if (filterButton) {
+                    filterButton.classList.add('active');
+                }
+                
+            } catch (error) {
+                console.error('Error loading spotlights:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Failed to load spotlights</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function loadSpotlightTypes() {
+            const container = document.getElementById('spotlightTypes');
+            const select = document.getElementById('spotlightTypeSelect');
+            
+            // Fixed spotlight types with pricing
+            const spotlightTypes = [
+                { type: 'featured_deals', name: 'Featured Deals', icon: 'fas fa-crown', price: '15,000/day', color: '#F59E0B' },
+                { type: 'trending_now', name: 'Trending Now', icon: 'fas fa-fire', price: '10,000/day', color: '#EF4444' },
+                { type: 'editor_picks', name: "Editor's Picks", icon: 'fas fa-thumbs-up', price: '12,000/day', color: '#10B981' },
+                { type: 'new_arrivals', name: 'New Arrivals', icon: 'fas fa-bolt', price: '8,000/day', color: '#3B82F6' },
+                { type: 'budget_finds', name: 'Budget Finds', icon: 'fas fa-tag', price: '5,000/day', color: '#8B5CF6' },
+                { type: 'premium_listings', name: 'Premium Listings', icon: 'fas fa-gem', price: '20,000/day', color: '#EC4899' },
+                { type: 'local_favorites', name: 'Local Favorites', icon: 'fas fa-map-marker-alt', price: '7,000/day', color: '#14B8A6' },
+                { type: 'verified_sellers', name: 'Verified Sellers', icon: 'fas fa-check-circle', price: '18,000/day', color: '#84CC16' }
+            ];
+            
+            // Populate type cards
+            let cardsHtml = '';
+            spotlightTypes.forEach(type => {
+                cardsHtml += `
+                    <div class="type-card" data-type="${type.type}" onclick="selectSpotlightType('${type.type}')">
+                        <div class="type-icon">
+                            <i class="${type.icon}"></i>
+                        </div>
+                        <div class="type-name">${type.name}</div>
+                        <div class="type-price">${type.price}</div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = cardsHtml;
+            
+            // Populate dropdown
+            let selectHtml = '<option value="">Select a type</option>';
+            spotlightTypes.forEach(type => {
+                selectHtml += `<option value="${type.type}">${type.name} (${type.price})</option>`;
+            });
+            select.innerHTML = selectHtml;
+        }
+        
+        async function searchAds() {
+            const query = document.getElementById('searchAds').value;
+            const container = document.getElementById('searchResults');
+            
+            if (!query.trim()) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--gray);">
+                        <i class="fas fa-search fa-2x" style="margin-bottom: 12px;"></i>
+                        <p>Enter search terms to find ads for featuring</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Show loading
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <div class="loading"></div>
+                    <p style="margin-top: 12px; color: var(--gray);">Searching ads...</p>
+                </div>
+            `;
+            
+            try {
+                // Fallback to manual search
+                const { data: manualData, error: manualError } = await sb
+                    .from('ads')
+                    .select(`
+                        id,
+                        title,
+                        price,
+                        currency,
+                        view_count,
+                        image_urls,
+                        seller_id,
+                        profiles!ads_seller_id_fkey(full_name)
+                    `)
+                    .eq('status', 'active')
+                    .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
+                    .limit(20);
+                
+                if (manualError) throw manualError;
+                
+                // Check which ads are already featured
+                let ads = [];
+                if (manualData && manualData.length > 0) {
+                    const adIds = manualData.map(ad => ad.id);
+                    const { data: featuredAds } = await sb
+                        .from('homepage_spotlights')
+                        .select('ad_id')
+                        .in('ad_id', adIds)
+                        .eq('is_active', true)
+                        .gt('ends_at', new Date().toISOString());
+                    
+                    const featuredAdIds = new Set(featuredAds?.map(f => f.ad_id) || []);
+                    
+                    ads = manualData.map(ad => ({
+                        ad_id: ad.id,
+                        ad_title: ad.title,
+                        ad_price: ad.price,
+                        currency: ad.currency,
+                        seller_name: ad.profiles?.full_name || 'Unknown',
+                        view_count: ad.view_count || 0,
+                        already_featured: featuredAdIds.has(ad.id),
+                        image_url: ad.image_urls && ad.image_urls.length > 0 ? ad.image_urls[0] : null
+                    }));
+                }
+                
+                if (!ads || ads.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-search"></i>
+                            <p>No ads found for "${query}"</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = `
+                    <div style="margin-top: 20px;">
+                        <h4 style="margin-bottom: 16px;">Search Results (${ads.length})</h4>
+                        <div class="ads-grid">
+                `;
+                
+                ads.forEach(ad => {
+                    const featuredBadge = ad.already_featured ? 
+                        '<span class="status-badge status-active" style="margin-left: 8px;">Featured</span>' : '';
+                    const price = ad.ad_price ? `${ad.currency || 'UGX'} ${ad.ad_price.toLocaleString()}` : 'Free';
+                    
+                    html += `
+                        <div class="ad-card">
+                            <div class="ad-image" style="${ad.image_url ? `background-image: url('${ad.image_url}'); background-size: cover; background-position: center;` : ''}">
+                                ${!ad.image_url ? '<i class="fas fa-image"></i>' : ''}
+                            </div>
+                            <div class="ad-content">
+                                <div class="ad-title">${escapeHtml(ad.ad_title)}${featuredBadge}</div>
+                                <div class="ad-price">${price}</div>
+                                <div class="ad-meta">
+                                    <span>${escapeHtml(ad.seller_name)}</span>
+                                    <span>${ad.view_count} views</span>
+                                </div>
+                                <button class="btn btn-primary" style="width: 100%; margin-top: 12px;" 
+                                        onclick="selectAdForSpotlight(${ad.ad_id}, '${escapeHtml(ad.ad_title).replace(/'/g, "\\'")}', ${ad.ad_price || 0})"
+                                        ${ad.already_featured ? 'disabled style="background: var(--gray);"' : ''}>
+                                    <i class="fas fa-plus"></i>
+                                    ${ad.already_featured ? 'Already Featured' : 'Feature This Ad'}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div></div>`;
+                container.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error searching ads:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Failed to search ads. Please try again.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function selectAdForSpotlight(adId, adTitle, adPrice) {
+            selectedAd = { id: adId, title: adTitle, price: adPrice };
+            
+            try {
+                // Get ad details with SPECIFIED foreign key relationship
+                const { data: ad, error } = await sb
+                    .from('ads')
+                    .select(`
+                        description, 
+                        image_urls, 
+                        seller_id, 
+                        profiles!ads_seller_id_fkey(full_name, phone)
+                    `)
+                    .eq('id', adId)
+                    .single();
+                
+                if (error) throw error;
+                
+                // Update modal
+                const firstImage = ad.image_urls && ad.image_urls.length > 0 ? 
+                    `<img src="${ad.image_urls[0]}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 4px; margin-bottom: 8px;">` : 
+                    '';
+                
+                document.getElementById('selectedAdInfo').innerHTML = `
+                    ${firstImage}
+                    <div style="font-weight: 500; font-size: 16px;">${escapeHtml(adTitle)}</div>
+                    <div style="color: var(--primary); font-weight: bold; margin-top: 4px;">
+                        UGX ${adPrice.toLocaleString()}
+                    </div>
+                    <div style="font-size: 12px; color: var(--gray); margin-top: 4px;">
+                        Seller: ${escapeHtml(ad.profiles?.full_name || 'Unknown')} | 
+                        Phone: ${escapeHtml(ad.profiles?.phone || 'N/A')}
+                    </div>
+                    <div style="font-size: 12px; color: var(--gray); margin-top: 2px;">
+                        Ad ID: ${adId}
+                    </div>
+                `;
+                
+                // Show modal
+                addSpotlightModal.classList.add('active');
+                document.getElementById('modalError').style.display = 'none';
+                
+            } catch (error) {
+                console.error('Error loading ad details:', error);
+                document.getElementById('selectedAdInfo').innerHTML = `
+                    <div style="color: var(--danger);">
+                        <i class="fas fa-exclamation-circle"></i>
+                        Failed to load ad details
+                    </div>
+                `;
+            }
+        }
+        
+        function selectSpotlightType(type) {
+            selectedSpotlightType = type;
+            
+            // Update UI
+            document.querySelectorAll('.type-card').forEach(card => {
+                card.classList.remove('selected');
+                if (card.dataset.type === type) {
+                    card.classList.add('selected');
+                }
+            });
+            
+            // Update select
+            document.getElementById('spotlightTypeSelect').value = type;
+        }
+        
+        async function confirmAddSpotlight() {
+            const type = document.getElementById('spotlightTypeSelect').value;
+            const order = parseInt(document.getElementById('displayOrder').value) || 0;
+            const days = parseInt(document.getElementById('placementDays').value) || 7;
+            const price = parseFloat(document.getElementById('pricePaid').value) || 0;
+            const errorDiv = document.getElementById('modalError');
+            
+            errorDiv.textContent = '';
+            errorDiv.style.display = 'none';
+            
+            if (!selectedAd) {
+                errorDiv.textContent = 'Please select an ad first';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            if (!type) {
+                errorDiv.textContent = 'Please select a spotlight type';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            if (days < 1 || days > 30) {
+                errorDiv.textContent = 'Duration must be between 1 and 30 days';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // Show loading
+            const confirmBtn = document.getElementById('confirmAdd');
+            const originalText = confirmBtn.innerHTML;
+            confirmBtn.innerHTML = '<div class="loading" style="width: 16px; height: 16px;"></div>';
+            confirmBtn.disabled = true;
+            
+            try {
+                // First try to use the function if it exists
+                let functionError = null;
+                try {
+                    const { error } = await sb.rpc('add_to_homepage_spotlight', {
+                        p_ad_id: selectedAd.id,
+                        p_spotlight_type: type,
+                        p_admin_id: currentUser.id,
+                        p_display_order: order,
+                        p_placement_days: days,
+                        p_price_paid: price
+                    });
+                    
+                    if (error) throw error;
+                } catch (rpcError) {
+                    console.log('RPC function not available, using manual insert');
+                    functionError = rpcError;
+                    
+                    // Calculate end date
+                    const endsAt = new Date();
+                    endsAt.setDate(endsAt.getDate() + days);
+                    
+                    // Insert manually
+                    const { error: insertError } = await sb
+                        .from('homepage_spotlights')
+                        .insert({
+                            ad_id: selectedAd.id,
+                            spotlight_type: type,
+                            display_order: order,
+                            highlight_color: getSpotlightColor(type),
+                            is_active: true,
+                            price_paid: price,
+                            currency: 'UGX',
+                            placement_days: days,
+                            added_by: currentUser.id,
+                            starts_at: new Date().toISOString(),
+                            ends_at: endsAt.toISOString()
+                        });
+                    
+                    if (insertError) throw insertError;
+                    
+                    // Update the ad's featured status
+                    await sb
+                        .from('ads')
+                        .update({ 
+                            is_featured: true, 
+                            featured_until: endsAt.toISOString() 
+                        })
+                        .eq('id', selectedAd.id);
+                    
+                    // Log admin action
+                    await sb
+                        .from('admin_actions')
+                        .insert({
+                            admin_id: currentUser.id,
+                            action_type: 'ad_featured',
+                            target_ad_id: selectedAd.id,
+                            details: {
+                                spotlight_type: type,
+                                duration_days: days,
+                                price_paid: price
+                            }
+                        });
+                }
+                
+                // Success
+                alert(`Success! Ad "${selectedAd.title}" added to ${type} spotlight for ${days} days.`);
+                closeAddModal();
+                
+                // Refresh data
+                if (currentPage === 'spotlights') {
+                    await loadSpotlights();
+                }
+                if (currentPage === 'dashboard') {
+                    await loadDashboard();
+                }
+                
+                // Clear search
+                document.getElementById('searchAds').value = '';
+                document.getElementById('searchResults').innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--gray);">
+                        <i class="fas fa-check-circle fa-2x" style="margin-bottom: 12px; color: var(--secondary);"></i>
+                        <p>Ad added successfully! Search for more ads.</p>
+                    </div>
+                `;
+                
+                selectedAd = null;
+                selectedSpotlightType = null;
+                
+            } catch (error) {
+                console.error('Error adding spotlight:', error);
+                errorDiv.textContent = error.message || 'Failed to add spotlight. Please try again.';
+                errorDiv.style.display = 'block';
+            } finally {
+                confirmBtn.innerHTML = originalText;
+                confirmBtn.disabled = false;
+            }
+        }
+        
+        function getSpotlightColor(type) {
+            const colors = {
+                'featured_deals': '#F59E0B',
+                'trending_now': '#EF4444',
+                'editor_picks': '#10B981',
+                'new_arrivals': '#3B82F6',
+                'budget_finds': '#8B5CF6',
+                'premium_listings': '#EC4899',
+                'local_favorites': '#14B8A6',
+                'verified_sellers': '#84CC16'
+            };
+            return colors[type] || '#3B82F6';
+        }
+        
+        function closeAddModal() {
+            addSpotlightModal.classList.remove('active');
+            selectedAd = null;
+            selectedSpotlightType = null;
+            document.getElementById('modalError').style.display = 'none';
+            
+            // Reset form
+            document.getElementById('displayOrder').value = 0;
+            document.getElementById('placementDays').value = 7;
+            document.getElementById('pricePaid').value = 0;
+            document.getElementById('spotlightTypeSelect').value = '';
+            
+            // Reset type cards
+            document.querySelectorAll('.type-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+        }
+        
+        async function removeSpotlight(spotlightId) {
+            currentSpotlightId = spotlightId;
+            currentAction = 'remove';
+            
+            document.getElementById('actionModalTitle').textContent = 'Remove Spotlight';
+            document.getElementById('actionModalMessage').textContent = 'Are you sure you want to remove this spotlight? This action cannot be undone.';
+            document.getElementById('confirmAction').className = 'btn btn-danger';
+            document.getElementById('confirmAction').textContent = 'Remove';
+            
+            actionModal.classList.add('active');
+        }
+        
+        async function extendSpotlight(spotlightId) {
+            currentSpotlightId = spotlightId;
+            currentAction = 'extend';
+            
+            document.getElementById('actionModalTitle').textContent = 'Extend Spotlight';
+            document.getElementById('actionModalMessage').textContent = 'Extend this spotlight for 7 additional days?';
+            document.getElementById('confirmAction').className = 'btn btn-success';
+            document.getElementById('confirmAction').textContent = 'Extend';
+            
+            actionModal.classList.add('active');
+        }
+        
+        async function changeOrder(spotlightId, newOrder) {
+            try {
+                const { error } = await sb
+                    .from('homepage_spotlights')
+                    .update({ display_order: newOrder })
+                    .eq('id', spotlightId);
+                
+                if (error) throw error;
+                
+                // Refresh the list
+                await loadSpotlights();
+                
+            } catch (error) {
+                console.error('Error changing order:', error);
+                alert('Failed to update order');
+            }
+        }
+        
+        async function handleActionConfirm() {
+            try {
+                if (currentAction === 'remove') {
+                    // Remove spotlight
+                    const { error } = await sb
+                        .from('homepage_spotlights')
+                        .update({ is_active: false })
+                        .eq('id', currentSpotlightId);
+                    
+                    if (error) throw error;
+                    
+                    // Show success
+                    alert('Spotlight removed successfully!');
+                    
+                } else if (currentAction === 'extend') {
+                    // Extend spotlight by 7 days
+                    const newEndDate = new Date();
+                    newEndDate.setDate(newEndDate.getDate() + 7);
+                    
+                    const { error } = await sb
+                        .from('homepage_spotlights')
+                        .update({ 
+                            ends_at: newEndDate.toISOString()
+                        })
+                        .eq('id', currentSpotlightId);
+                    
+                    if (error) throw error;
+                    
+                    // Also update the ad's featured_until if it exists in the spotlight
+                    const { data: spotlight } = await sb
+                        .from('homepage_spotlights')
+                        .select('ad_id')
+                        .eq('id', currentSpotlightId)
+                        .single();
+                    
+                    if (spotlight) {
+                        await sb
+                            .from('ads')
+                            .update({ 
+                                featured_until: newEndDate.toISOString()
+                            })
+                            .eq('id', spotlight.ad_id);
+                    }
+                    
+                    alert('Spotlight extended for 7 days!');
+                }
+                
+                closeActionModal();
+                
+                // Refresh data
+                if (currentPage === 'spotlights') {
+                    await loadSpotlights();
+                }
+                if (currentPage === 'dashboard') {
+                    await loadDashboard();
+                }
+                
+            } catch (error) {
+                console.error('Error performing action:', error);
+                alert('Failed to perform action');
+                closeActionModal();
+            }
+        }
+        
+        async function loadRequests() {
+            const container = document.getElementById('pendingRequests');
+            
+            try {
+                // Try to use the function first
+                let requests;
+                try {
+                    const { data: functionData, error: functionError } = await sb
+                        .rpc('get_pending_spotlight_requests');
+                    
+                    if (!functionError) {
+                        requests = functionData;
+                    } else {
+                        throw new Error('Function not available');
+                    }
+                } catch (functionError) {
+                    // Fallback to manual query
+                    const { data: manualData, error: manualError } = await sb
+                        .from('spotlight_requests')
+                        .select(`
+                            id,
+                            ad_id,
+                            spotlight_type,
+                            requested_days,
+                            message,
+                            requested_by,
+                            ads!spotlight_requests_ad_id_fkey(
+                                title,
+                                price,
+                                seller_id,
+                                profiles!ads_seller_id_fkey(full_name, phone)
+                            )
+                        `)
+                        .eq('status', 'pending')
+                        .order('created_at', { ascending: false });
+                    
+                    if (manualError) throw manualError;
+                    
+                    requests = manualData?.map(req => ({
+                        id: req.id,
+                        ad_id: req.ad_id,
+                        ad_title: req.ads?.title || 'Unknown Ad',
+                        ad_price: req.ads?.price || 0,
+                        requested_by: req.requested_by,
+                        requested_by_name: req.ads?.profiles?.full_name || 'Unknown',
+                        requested_by_phone: req.ads?.profiles?.phone || '',
+                        spotlight_type: req.spotlight_type,
+                        requested_days: req.requested_days || 7,
+                        message: req.message || ''
+                    })) || [];
+                }
+                
+                if (!requests || requests.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>No pending requests</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Ad</th>
+                                <th>Seller</th>
+                                <th>Requested For</th>
+                                <th>Message</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                requests.forEach(req => {
+                    html += `
+                        <tr>
+                            <td>
+                                <div style="font-weight: 500;">${escapeHtml(req.ad_title)}</div>
+                                <div style="font-size: 12px; color: var(--gray);">
+                                    UGX ${(req.ad_price || 0).toLocaleString()}
+                                </div>
+                            </td>
+                            <td>
+                                <div>${escapeHtml(req.requested_by_name)}</div>
+                                <div style="font-size: 12px; color: var(--gray);">
+                                    ${escapeHtml(req.requested_by_phone || 'No phone')}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status-badge" style="background: #EFF6FF; color: #1D4ED8;">
+                                    ${req.spotlight_type.replace('_', ' ')}
+                                </span>
+                                <div style="font-size: 12px; color: var(--gray); margin-top: 4px;">
+                                    ${req.requested_days} days
+                                </div>
+                            </td>
+                            <td>
+                                <div style="max-width: 200px; font-size: 13px;">${escapeHtml(req.message || 'No message')}</div>
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 4px;">
+                                    <button class="btn btn-success btn-sm" onclick="approveRequest(${req.id}, ${req.ad_id}, '${req.spotlight_type}')">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" onclick="rejectRequest(${req.id})">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading requests:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Failed to load requests</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function approveRequest(requestId, adId, spotlightType) {
+            currentRequestId = requestId;
+            currentAction = 'approve_request';
+            selectedAd = { id: adId };
+            selectedSpotlightType = spotlightType;
+            
+            document.getElementById('actionModalTitle').textContent = 'Approve Request';
+            document.getElementById('actionModalMessage').textContent = 'Approve this spotlight request and add the ad to homepage?';
+            document.getElementById('confirmAction').className = 'btn btn-success';
+            document.getElementById('confirmAction').textContent = 'Approve & Add';
+            
+            actionModal.classList.add('active');
+        }
+        
+        async function rejectRequest(requestId) {
+            currentRequestId = requestId;
+            currentAction = 'reject_request';
+            
+            document.getElementById('actionModalTitle').textContent = 'Reject Request';
+            document.getElementById('actionModalMessage').textContent = 'Reject this spotlight request?';
+            document.getElementById('confirmAction').className = 'btn btn-danger';
+            document.getElementById('confirmAction').textContent = 'Reject';
+            
+            actionModal.classList.add('active');
+        }
+        
+        async function handleRequestAction() {
+            try {
+                if (currentAction === 'approve_request') {
+                    // First add to spotlight using manual method
+                    const endsAt = new Date();
+                    endsAt.setDate(endsAt.getDate() + 7);
+                    
+                    const { error: spotlightError } = await sb
+                        .from('homepage_spotlights')
+                        .insert({
+                            ad_id: selectedAd.id,
+                            spotlight_type: selectedSpotlightType,
+                            display_order: 0,
+                            highlight_color: getSpotlightColor(selectedSpotlightType),
+                            is_active: true,
+                            price_paid: 0,
+                            currency: 'UGX',
+                            placement_days: 7,
+                            added_by: currentUser.id,
+                            starts_at: new Date().toISOString(),
+                            ends_at: endsAt.toISOString()
+                        });
+                    
+                    if (spotlightError) throw spotlightError;
+                    
+                    // Update ad's featured status
+                    await sb
+                        .from('ads')
+                        .update({ 
+                            is_featured: true, 
+                            featured_until: endsAt.toISOString() 
+                        })
+                        .eq('id', selectedAd.id);
+                    
+                    // Then update request status
+                    const { error: requestError } = await sb
+                        .from('spotlight_requests')
+                        .update({ 
+                            status: 'approved',
+                            processed_by: currentUser.id,
+                            processed_at: new Date().toISOString()
+                        })
+                        .eq('id', currentRequestId);
+                    
+                    if (requestError) throw requestError;
+                    
+                    alert('Request approved and ad added to spotlight!');
+                    
+                } else if (currentAction === 'reject_request') {
+                    // Update request status to rejected
+                    const { error } = await sb
+                        .from('spotlight_requests')
+                        .update({ 
+                            status: 'rejected',
+                            processed_by: currentUser.id,
+                            processed_at: new Date().toISOString()
+                        })
+                        .eq('id', currentRequestId);
+                    
+                    if (error) throw error;
+                    
+                    alert('Request rejected.');
+                }
+                
+                closeActionModal();
+                
+                // Refresh requests
+                await loadRequests();
+                
+                // Update dashboard if needed
+                if (currentPage === 'dashboard') {
+                    await loadDashboard();
+                }
+                
+            } catch (error) {
+                console.error('Error processing request:', error);
+                alert('Failed to process request');
+                closeActionModal();
+            }
+        }
+        
+        function closeActionModal() {
+            actionModal.classList.remove('active');
+            currentAction = null;
+            currentSpotlightId = null;
+            currentRequestId = null;
+        }
+        
+        async function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                await sb.auth.signOut();
+                location.reload();
+            }
+        }
+        
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Update the confirm action to handle requests too
+        document.getElementById('confirmAction').addEventListener('click', async function() {
+            if (currentAction === 'remove' || currentAction === 'extend') {
+                await handleActionConfirm();
+            } else if (currentAction === 'approve_request' || currentAction === 'reject_request') {
+                await handleRequestAction();
+            }
+        });
+        
+        // Make functions available globally
+        window.selectAdForSpotlight = selectAdForSpotlight;
+        window.selectSpotlightType = selectSpotlightType;
+        window.removeSpotlight = removeSpotlight;
+        window.extendSpotlight = extendSpotlight;
+        window.changeOrder = changeOrder;
+        window.approveRequest = approveRequest;
+        window.rejectRequest = rejectRequest;
+    </script>
+</body>
+</html>

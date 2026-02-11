@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Spotlight Pricing - Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2563EB;
+            --primary-light: #3B82F6;
+            --secondary: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --dark: #1F2937;
+            --gray: #6B7280;
+            --light-gray: #E5E7EB;
+            --lightest-gray: #F3F4F6;
+            --white: #FFFFFF;
+            --radius: 8px;
+            --radius-lg: 12px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--lightest-gray);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: var(--white);
+            padding: 20px 0;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .admin-nav {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: var(--gray);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            transition: all 0.2s;
+        }
+        
+        .nav-link:hover {
+            background: var(--lightest-gray);
+            color: var(--primary);
+        }
+        
+        .nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--gray);
+        }
+        
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+        
+        .page-subtitle {
+            color: var(--gray);
+            margin-bottom: 30px;
+        }
+        
+        /* Controls Section */
+        .controls-section {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .search-box {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 40px;
+            border: 1px solid var(--light-gray);
+            border-radius: var(--radius);
+            font-size: 14px;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #0DA271;
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #DC2626;
+            transform: translateY(-2px);
+        }
+        
+        /* Pricing Table */
+        .pricing-table-container {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            overflow-x: auto;
+        }
+        
+        .pricing-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .pricing-table th {
+            background: var(--lightest-gray);
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+            border-bottom: 2px solid var(--light-gray);
+        }
+        
+        .pricing-table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--light-gray);
+            vertical-align: middle;
+        }
+        
+        .pricing-table tr:hover {
+            background: var(--lightest-gray);
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-badge.active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--secondary);
+        }
+        
+        .status-badge.inactive {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+        
+        .priority-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--lightest-gray);
+            color: var(--gray);
+            border: none;
+        }
+        
+        .btn-icon:hover {
+            background: var(--light-gray);
+        }
+        
+        .btn-icon.edit:hover {
+            color: var(--primary);
+        }
+        
+        .btn-icon.delete:hover {
+            color: var(--danger);
+        }
+        
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalSlideUp 0.3s ease;
+        }
+        
+        @keyframes modalSlideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .modal-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--gray);
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius);
+        }
+        
+        .close-modal:hover {
+            background: var(--lightest-gray);
+            color: var(--dark);
+        }
+        
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--light-gray);
+            border-radius: var(--radius);
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+        
+        .form-footer {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--light-gray);
+        }
+        
+        /* Messages */
+        .message {
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .error-message {
+            background: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #FCA5A5;
+        }
+        
+        .success-message {
+            background: #D1FAE5;
+            color: #065F46;
+            border: 1px solid #A7F3D0;
+        }
+        
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--light-gray);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray);
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: var(--light-gray);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .admin-nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .controls-section {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .search-box {
+                max-width: 100%;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .pricing-table {
+                font-size: 14px;
+            }
+            
+            .pricing-table th,
+            .pricing-table td {
+                padding: 12px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="admin-dashboard.html" class="logo">
+                    <i class="fas fa-bullhorn"></i>
+                    iBlue Uganda Admin
+                </a>
+                <div class="admin-nav">
+                    <a href="admin-dashboard.html" class="nav-link">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Dashboard
+                    </a>
+                    <a href="admin-ads.html" class="nav-link">
+                        <i class="fas fa-ad"></i>
+                        Ads
+                    </a>
+                    <a href="admin-users.html" class="nav-link">
+                        <i class="fas fa-users"></i>
+                        Users
+                    </a>
+                    <a href="admin-pricing.html" class="nav-link active">
+                        <i class="fas fa-tags"></i>
+                        Pricing
+                    </a>
+                    <a href="admin-reports.html" class="nav-link">
+                        <i class="fas fa-flag"></i>
+                        Reports
+                    </a>
+                </div>
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="adminName">Admin User</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h1 class="page-title">Manage Spotlight Pricing</h1>
+        <p class="page-subtitle">Configure pricing for different promotion types and spotlight placements</p>
+        
+        <!-- Messages -->
+        <div class="error-message message" id="errorMessage"></div>
+        <div class="success-message message" id="successMessage"></div>
+        
+        <!-- Controls -->
+        <div class="controls-section">
+            <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" 
+                       class="form-control search-input" 
+                       id="searchInput" 
+                       placeholder="Search pricing plans...">
+            </div>
+            <button class="btn btn-primary" id="addPricingBtn">
+                <i class="fas fa-plus"></i>
+                Add New Pricing
+            </button>
+        </div>
+        
+        <!-- Pricing Table -->
+        <div class="pricing-table-container">
+            <table class="pricing-table" id="pricingTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Spotlight Type</th>
+                        <th>Package Name</th>
+                        <th>Daily Rate</th>
+                        <th>Weekly Rate</th>
+                        <th>Monthly Rate</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="pricingTableBody">
+                    <!-- Data will be loaded here -->
+                </tbody>
+            </table>
+            
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <i class="fas fa-tags"></i>
+                <h3>No pricing plans found</h3>
+                <p>Add your first spotlight pricing plan to get started</p>
+                <button class="btn btn-primary" id="addFirstPricingBtn" style="margin-top: 20px;">
+                    <i class="fas fa-plus"></i>
+                    Add First Pricing Plan
+                </button>
+            </div>
+            
+            <!-- Loading State -->
+            <div id="loadingState" style="text-align: center; padding: 40px;">
+                <div class="loading" style="margin: 0 auto;"></div>
+                <p style="margin-top: 10px; color: var(--gray);">Loading pricing data...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add/Edit Pricing Modal -->
+    <div class="modal" id="pricingModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Add New Pricing Plan</h2>
+                <button class="close-modal" id="closeModalBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="pricingForm">
+                <input type="hidden" id="pricingId">
+                
+                <div class="form-group">
+                    <label class="form-label" for="spotlightType">Spotlight Type *</label>
+                    <select class="form-control" id="spotlightType" required>
+                        <option value="">Select spotlight type</option>
+                        <option value="featured_deals">Featured Deals</option>
+                        <option value="trending_now">Trending Now</option>
+                        <option value="editor_picks">Editor Picks</option>
+                        <option value="new_arrivals">New Arrivals</option>
+                        <option value="budget_finds">Budget Finds</option>
+                        <option value="premium_listings">Premium Listings</option>
+                        <option value="local_favorites">Local Favorites</option>
+                        <option value="verified_sellers">Verified Sellers</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="packageName">Package Name *</label>
+                    <input type="text" 
+                           class="form-control" 
+                           id="packageName" 
+                           placeholder="e.g., Premium Spotlight Package" 
+                           required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="description">Description</label>
+                    <textarea class="form-control" 
+                              id="description" 
+                              rows="3" 
+                              placeholder="Describe the benefits of this package..."></textarea>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="dailyRate">Daily Rate (UGX) *</label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="dailyRate" 
+                               min="0" 
+                               step="0.01" 
+                               placeholder="5000" 
+                               required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="weeklyRate">Weekly Rate (UGX)</label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="weeklyRate" 
+                               min="0" 
+                               step="0.01" 
+                               placeholder="30000">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="monthlyRate">Monthly Rate (UGX)</label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="monthlyRate" 
+                               min="0" 
+                               step="0.01" 
+                               placeholder="120000">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="currency">Currency</label>
+                        <select class="form-control" id="currency">
+                            <option value="UGX" selected>UGX - Ugandan Shilling</option>
+                            <option value="USD">USD - US Dollar</option>
+                            <option value="KES">KES - Kenyan Shilling</option>
+                            <option value="TZS">TZS - Tanzanian Shilling</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="maxAdsPerDay">Max Ads Per Day</label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="maxAdsPerDay" 
+                               min="1" 
+                               value="10">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="displayPriority">Display Priority</label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="displayPriority" 
+                               min="1" 
+                               value="1">
+                        <small style="color: var(--gray); font-size: 12px;">Lower number = higher priority</small>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="includesVerification">
+                        <label class="form-label" for="includesVerification" style="margin-bottom: 0;">
+                            Includes Seller Verification
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="isActive" checked>
+                        <label class="form-label" for="isActive" style="margin-bottom: 0;">
+                            Active (Visible to users)
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-footer">
+                    <button type="submit" class="btn btn-primary" id="savePricingBtn">
+                        Save Pricing Plan
+                    </button>
+                    <button type="button" class="btn" id="cancelPricingBtn" 
+                            style="background: var(--light-gray); color: var(--dark);">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Confirm Delete</h2>
+                <button class="close-modal" id="closeDeleteModalBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div style="padding: 20px 0;">
+                <p>Are you sure you want to delete this pricing plan?</p>
+                <p style="color: var(--danger); margin-top: 10px;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    This action cannot be undone. Existing promotions using this pricing will not be affected.
+                </p>
+            </div>
+            
+            <div class="form-footer">
+                <button class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash"></i>
+                    Delete
+                </button>
+                <button class="btn" id="cancelDeleteBtn" 
+                        style="background: var(--light-gray); color: var(--dark);">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = "https://uufhvmmgwzkxvvdbqemz.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1Zmh2bW1nd3preHZ2ZGJxZW16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMDIzNTYsImV4cCI6MjA4NTg3ODM1Nn0.WABHx4ilFRkhPHP-y4ZC4E8Kb7PRqY-cyxI8cVS8Tyc";
+        
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // State
+        let currentAdmin = null;
+        let pricingPlans = [];
+        let currentPricingId = null;
+        let isEditMode = false;
+        
+        // DOM Elements
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const pricingTableBody = document.getElementById('pricingTableBody');
+        const emptyState = document.getElementById('emptyState');
+        const loadingState = document.getElementById('loadingState');
+        const searchInput = document.getElementById('searchInput');
+        const addPricingBtn = document.getElementById('addPricingBtn');
+        const addFirstPricingBtn = document.getElementById('addFirstPricingBtn');
+        const pricingModal = document.getElementById('pricingModal');
+        const deleteModal = document.getElementById('deleteModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const closeDeleteModalBtn = document.getElementById('closeDeleteModalBtn');
+        const cancelPricingBtn = document.getElementById('cancelPricingBtn');
+        const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+        const pricingForm = document.getElementById('pricingForm');
+        const savePricingBtn = document.getElementById('savePricingBtn');
+        const modalTitle = document.getElementById('modalTitle');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        const adminName = document.getElementById('adminName');
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            await checkAdminAuth();
+            await loadPricingPlans();
+            setupEventListeners();
+        });
+        
+        async function checkAdminAuth() {
+            try {
+                const { data: { session } } = await sb.auth.getSession();
+                
+                if (!session) {
+                    window.location.href = 'admin-login.html';
+                    return;
+                }
+                
+                const { data: profile, error } = await sb
+                    .from('profiles')
+                    .select('id, full_name, email, is_admin, admin_role')
+                    .eq('id', session.user.id)
+                    .single();
+                
+                if (error) throw error;
+                
+                if (!profile || !profile.is_admin) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                currentAdmin = profile;
+                adminName.textContent = profile.full_name || profile.email;
+                
+            } catch (error) {
+                console.error('Auth error:', error);
+                window.location.href = 'admin-login.html';
+            }
+        }
+        
+        async function loadPricingPlans() {
+            try {
+                loadingState.style.display = 'block';
+                emptyState.style.display = 'none';
+                pricingTableBody.innerHTML = '';
+                
+                const { data: pricing, error } = await sb
+                    .from('spotlight_pricing')
+                    .select('*')
+                    .order('display_priority', { ascending: true });
+                
+                if (error) throw error;
+                
+                pricingPlans = pricing || [];
+                renderPricingTable();
+                
+            } catch (error) {
+                console.error('Error loading pricing:', error);
+                showError('Failed to load pricing data');
+            } finally {
+                loadingState.style.display = 'none';
+            }
+        }
+        
+        function renderPricingTable(searchTerm = '') {
+            if (pricingPlans.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            let filteredPlans = pricingPlans;
+            
+            if (searchTerm) {
+                const term = searchTerm.toLowerCase();
+                filteredPlans = pricingPlans.filter(plan => 
+                    plan.package_name.toLowerCase().includes(term) ||
+                    plan.spotlight_type.toLowerCase().includes(term) ||
+                    (plan.description && plan.description.toLowerCase().includes(term))
+                );
+            }
+            
+            if (filteredPlans.length === 0) {
+                pricingTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 40px; color: var(--gray);">
+                            No pricing plans match your search
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let html = '';
+            
+            filteredPlans.forEach(plan => {
+                const spotlightTypeMap = {
+                    'featured_deals': 'Featured Deals',
+                    'trending_now': 'Trending Now',
+                    'editor_picks': 'Editor Picks',
+                    'new_arrivals': 'New Arrivals',
+                    'budget_finds': 'Budget Finds',
+                    'premium_listings': 'Premium Listings',
+                    'local_favorites': 'Local Favorites',
+                    'verified_sellers': 'Verified Sellers'
+                };
+                
+                const displayType = spotlightTypeMap[plan.spotlight_type] || plan.spotlight_type;
+                
+                html += `
+                    <tr>
+                        <td>${plan.id}</td>
+                        <td>
+                            <strong>${displayType}</strong>
+                            ${plan.description ? `<br><small style="color: var(--gray);">${plan.description.substring(0, 50)}${plan.description.length > 50 ? '...' : ''}</small>` : ''}
+                        </td>
+                        <td>${plan.package_name}</td>
+                        <td>
+                            <strong>${plan.currency} ${parseFloat(plan.daily_rate).toLocaleString()}</strong>
+                        </td>
+                        <td>${plan.weekly_rate ? `${plan.currency} ${parseFloat(plan.weekly_rate).toLocaleString()}` : '-'}</td>
+                        <td>${plan.monthly_rate ? `${plan.currency} ${parseFloat(plan.monthly_rate).toLocaleString()}` : '-'}</td>
+                        <td>
+                            <span class="priority-badge">${plan.display_priority || 1}</span>
+                        </td>
+                        <td>
+                            <span class="status-badge ${plan.is_active ? 'active' : 'inactive'}">
+                                <i class="fas fa-${plan.is_active ? 'check-circle' : 'times-circle'}"></i>
+                                ${plan.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-icon edit" onclick="editPricing(${plan.id})" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-icon delete" onclick="confirmDelete(${plan.id})" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            pricingTableBody.innerHTML = html;
+        }
+        
+        function editPricing(id) {
+            const plan = pricingPlans.find(p => p.id === id);
+            if (!plan) return;
+            
+            currentPricingId = id;
+            isEditMode = true;
+            
+            // Fill form
+            document.getElementById('pricingId').value = plan.id;
+            document.getElementById('spotlightType').value = plan.spotlight_type;
+            document.getElementById('packageName').value = plan.package_name;
+            document.getElementById('description').value = plan.description || '';
+            document.getElementById('dailyRate').value = plan.daily_rate;
+            document.getElementById('weeklyRate').value = plan.weekly_rate || '';
+            document.getElementById('monthlyRate').value = plan.monthly_rate || '';
+            document.getElementById('currency').value = plan.currency || 'UGX';
+            document.getElementById('maxAdsPerDay').value = plan.max_ads_per_day || 10;
+            document.getElementById('displayPriority').value = plan.display_priority || 1;
+            document.getElementById('includesVerification').checked = plan.includes_verification || false;
+            document.getElementById('isActive').checked = plan.is_active !== false;
+            
+            // Update modal title
+            modalTitle.textContent = 'Edit Pricing Plan';
+            
+            // Show modal
+            pricingModal.classList.add('active');
+        }
+        
+        function confirmDelete(id) {
+            currentPricingId = id;
+            deleteModal.classList.add('active');
+        }
+        
+        async function deletePricing() {
+            try {
+                showLoading(confirmDeleteBtn);
+                
+                const { error } = await sb
+                    .from('spotlight_pricing')
+                    .delete()
+                    .eq('id', currentPricingId);
+                
+                if (error) throw error;
+                
+                // Remove from local array
+                pricingPlans = pricingPlans.filter(p => p.id !== currentPricingId);
+                
+                // Update UI
+                renderPricingTable(searchInput.value);
+                deleteModal.classList.remove('active');
+                showSuccess('Pricing plan deleted successfully');
+                
+                // Record admin action
+                await recordAdminAction('category_deleted', null, {
+                    target: 'spotlight_pricing',
+                    pricing_id: currentPricingId
+                });
+                
+            } catch (error) {
+                console.error('Error deleting pricing:', error);
+                showError('Failed to delete pricing plan');
+            } finally {
+                hideLoading(confirmDeleteBtn, '<i class="fas fa-trash"></i> Delete');
+            }
+        }
+        
+        function showAddPricingModal() {
+            currentPricingId = null;
+            isEditMode = false;
+            
+            // Reset form
+            pricingForm.reset();
+            document.getElementById('currency').value = 'UGX';
+            document.getElementById('maxAdsPerDay').value = 10;
+            document.getElementById('displayPriority').value = 1;
+            document.getElementById('includesVerification').checked = false;
+            document.getElementById('isActive').checked = true;
+            
+            // Update modal title
+            modalTitle.textContent = 'Add New Pricing Plan';
+            
+            // Show modal
+            pricingModal.classList.add('active');
+        }
+        
+        async function savePricing(e) {
+            e.preventDefault();
+            
+            try {
+                showLoading(savePricingBtn);
+                
+                const formData = {
+                    spotlight_type: document.getElementById('spotlightType').value,
+                    package_name: document.getElementById('packageName').value,
+                    description: document.getElementById('description').value || null,
+                    daily_rate: parseFloat(document.getElementById('dailyRate').value),
+                    weekly_rate: document.getElementById('weeklyRate').value ? 
+                        parseFloat(document.getElementById('weeklyRate').value) : null,
+                    monthly_rate: document.getElementById('monthlyRate').value ? 
+                        parseFloat(document.getElementById('monthlyRate').value) : null,
+                    currency: document.getElementById('currency').value,
+                    max_ads_per_day: parseInt(document.getElementById('maxAdsPerDay').value) || null,
+                    display_priority: parseInt(document.getElementById('displayPriority').value) || 1,
+                    includes_verification: document.getElementById('includesVerification').checked,
+                    is_active: document.getElementById('isActive').checked,
+                    updated_at: new Date().toISOString()
+                };
+                
+                let result;
+                
+                if (isEditMode) {
+                    // Update existing pricing
+                    const { data, error } = await sb
+                        .from('spotlight_pricing')
+                        .update(formData)
+                        .eq('id', currentPricingId)
+                        .select()
+                        .single();
+                    
+                    if (error) throw error;
+                    result = data;
+                    
+                    // Update local array
+                    const index = pricingPlans.findIndex(p => p.id === currentPricingId);
+                    if (index !== -1) {
+                        pricingPlans[index] = result;
+                    }
+                    
+                    showSuccess('Pricing plan updated successfully');
+                    
+                    // Record admin action
+                    await recordAdminAction('category_updated', null, {
+                        target: 'spotlight_pricing',
+                        pricing_id: currentPricingId,
+                        changes: formData
+                    });
+                    
+                } else {
+                    // Add new pricing
+                    formData.created_at = new Date().toISOString();
+                    
+                    const { data, error } = await sb
+                        .from('spotlight_pricing')
+                        .insert(formData)
+                        .select()
+                        .single();
+                    
+                    if (error) throw error;
+                    result = data;
+                    
+                    // Add to local array
+                    pricingPlans.push(result);
+                    
+                    showSuccess('Pricing plan added successfully');
+                    
+                    // Record admin action
+                    await recordAdminAction('category_created', null, {
+                        target: 'spotlight_pricing',
+                        pricing_id: result.id,
+                        data: formData
+                    });
+                }
+                
+                // Update UI
+                renderPricingTable(searchInput.value);
+                pricingModal.classList.remove('active');
+                
+            } catch (error) {
+                console.error('Error saving pricing:', error);
+                showError(error.message || 'Failed to save pricing plan');
+            } finally {
+                hideLoading(savePricingBtn, 'Save Pricing Plan');
+            }
+        }
+        
+        async function recordAdminAction(actionType, targetId, details) {
+            try {
+                await sb
+                    .from('admin_actions')
+                    .insert({
+                        admin_id: currentAdmin.id,
+                        action_type: actionType,
+                        target_category_id: targetId,
+                        details: details,
+                        ip_address: await getClientIP(),
+                        performed_at: new Date().toISOString()
+                    });
+            } catch (error) {
+                console.warn('Failed to record admin action:', error);
+            }
+        }
+        
+        async function getClientIP() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                return data.ip;
+            } catch {
+                return 'unknown';
+            }
+        }
+        
+        function showLoading(button, originalText = '') {
+            button.dataset.originalText = button.innerHTML;
+            button.innerHTML = '<div class="loading"></div>';
+            button.disabled = true;
+        }
+        
+        function hideLoading(button, fallbackText = '') {
+            button.innerHTML = button.dataset.originalText || fallbackText;
+            button.disabled = false;
+            delete button.dataset.originalText;
+        }
+        
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+            
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+        
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+            
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 5000);
+        }
+        
+        function setupEventListeners() {
+            // Search
+            searchInput.addEventListener('input', (e) => {
+                renderPricingTable(e.target.value);
+            });
+            
+            // Add buttons
+            addPricingBtn.addEventListener('click', showAddPricingModal);
+            addFirstPricingBtn.addEventListener('click', showAddPricingModal);
+            
+            // Modal controls
+            closeModalBtn.addEventListener('click', () => {
+                pricingModal.classList.remove('active');
+            });
+            
+            closeDeleteModalBtn.addEventListener('click', () => {
+                deleteModal.classList.remove('active');
+            });
+            
+            cancelPricingBtn.addEventListener('click', () => {
+                pricingModal.classList.remove('active');
+            });
+            
+            cancelDeleteBtn.addEventListener('click', () => {
+                deleteModal.classList.remove('active');
+            });
+            
+            // Form submission
+            pricingForm.addEventListener('submit', savePricing);
+            
+            // Delete confirmation
+            confirmDeleteBtn.addEventListener('click', deletePricing);
+            
+            // Close modals on background click
+            [pricingModal, deleteModal].forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.classList.remove('active');
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>
