@@ -133,7 +133,7 @@
             padding: 14px;
             border: 1px solid var(--gray-light);
             border-radius: var(--border-radius);
-            font-size: 16px; /* Prevents iOS zoom */
+            font-size: 16px;
             transition: all 0.2s;
             background: white;
         }
@@ -148,7 +148,6 @@
             color: var(--gray);
         }
         
-        /* Password Input Wrapper */
         .password-wrapper {
             position: relative;
         }
@@ -170,7 +169,6 @@
             color: var(--dark);
         }
         
-        /* Login Button */
         .btn {
             padding: 14px 20px;
             border: none;
@@ -210,7 +208,6 @@
             box-shadow: none;
         }
         
-        /* Loading Spinner */
         .loading {
             display: inline-block;
             width: 20px;
@@ -225,7 +222,6 @@
             to { transform: rotate(360deg); }
         }
         
-        /* Login Footer */
         .login-footer {
             text-align: center;
             margin-top: 30px;
@@ -243,7 +239,6 @@
             margin-top: 8px;
         }
         
-        /* Responsive */
         @media (max-width: 480px) {
             .login-container {
                 margin: 40px 20px;
@@ -263,7 +258,6 @@
             }
         }
         
-        /* Admin Interface (initially hidden) */
         .admin-interface {
             display: none;
         }
@@ -329,7 +323,7 @@
     </div>
 
     <script>
-        // Supabase Configuration - REPLACE WITH YOUR CREDENTIALS
+        // Supabase Configuration
         const SUPABASE_URL = 'https://uufhvmmgwzkxvvdbqemz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1Zmh2bW1nd3preHZ2ZGJxZW16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMDIzNTYsImV4cCI6MjA4NTg3ODM1Nn0.WABHx4ilFRkhPHP-y4ZC4E8Kb7PRqY-cyxI8cVS8Tyc';
         
@@ -346,8 +340,92 @@
         const loginSuccess = document.getElementById('loginSuccess');
         const togglePassword = document.getElementById('togglePassword');
         
+        // ============ REDIRECT SYSTEM ============
+        // Enhanced return URL function similar to the reference code
+        function getReturnUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // Check for returnUrl parameter first
+            let returnUrl = urlParams.get('returnUrl');
+            
+            if (returnUrl) {
+                console.log("Found returnUrl in query params:", returnUrl);
+                return returnUrl;
+            }
+            
+            // Check for redirect parameter
+            returnUrl = urlParams.get('redirect');
+            if (returnUrl) {
+                console.log("Found redirect in query params:", returnUrl);
+                return returnUrl;
+            }
+            
+            // Check session storage
+            const storedReturnUrl = sessionStorage.getItem('returnUrl');
+            if (storedReturnUrl) {
+                console.log("Found returnUrl in sessionStorage:", storedReturnUrl);
+                sessionStorage.removeItem('returnUrl');
+                return storedReturnUrl;
+            }
+            
+            // Check localStorage as fallback
+            const localStorageUrl = localStorage.getItem('returnUrl');
+            if (localStorageUrl) {
+                console.log("Found returnUrl in localStorage:", localStorageUrl);
+                localStorage.removeItem('returnUrl');
+                return localStorageUrl;
+            }
+            
+            // Check for admin dashboard default
+            const adminDashboard = urlParams.get('admin') ? 'admin-dashboard.html' : null;
+            if (adminDashboard) {
+                console.log("Admin dashboard requested");
+                return adminDashboard;
+            }
+            
+            // Default to admin interface or index
+            console.log("No return URL found, defaulting to admin interface");
+            return window.location.origin + '/admin-dashboard.html';
+        }
+        
+        // Store return URL before navigation
+        function storeReturnUrl(url) {
+            if (url) {
+                sessionStorage.setItem('returnUrl', url);
+                localStorage.setItem('returnUrl', url);
+                console.log("Stored return URL:", url);
+            }
+        }
+        
+        // Clear stored return URLs
+        function clearReturnUrls() {
+            sessionStorage.removeItem('returnUrl');
+            localStorage.removeItem('returnUrl');
+            console.log("Cleared return URLs");
+        }
+        
+        // ============ AUTH FUNCTIONS ============
+        
         // Check authentication on page load
         document.addEventListener('DOMContentLoaded', async function() {
+            console.log("Admin login page loaded");
+            
+            // Store any provided return URL from query params
+            const urlParams = new URLSearchParams(window.location.search);
+            const returnUrl = urlParams.get('returnUrl') || urlParams.get('redirect');
+            
+            if (returnUrl) {
+                storeReturnUrl(returnUrl);
+            }
+            
+            // If no return URL in query params, check referrer
+            else if (document.referrer && 
+                     document.referrer !== window.location.href &&
+                     !document.referrer.includes('login.html') &&
+                     !document.referrer.includes('admin-login.html')) {
+                storeReturnUrl(document.referrer);
+            }
+            
             await checkAuth();
             
             // Enter key to login
@@ -374,7 +452,6 @@
                 const { data: { session } } = await sb.auth.getSession();
                 
                 if (!session) {
-                    // No session, show login page
                     showLoginPage();
                     return;
                 }
@@ -393,14 +470,20 @@
                 }
                 
                 if (!profile.is_admin) {
-                    // User is not admin
                     showErrorMessage('Access denied. Admin privileges required.');
                     await sb.auth.signOut();
                     return;
                 }
                 
-                // User is admin, redirect to admin interface
-                showAdminInterface();
+                // User is admin, get return URL and redirect
+                const returnUrl = getReturnUrl();
+                console.log("User already authenticated, redirecting to:", returnUrl);
+                
+                // Clear stored URLs
+                clearReturnUrls();
+                
+                // Redirect to admin interface
+                window.location.href = returnUrl;
                 
             } catch (error) {
                 console.error('Auth check error:', error);
@@ -415,56 +498,40 @@
         }
         
         function showAdminInterface() {
+            // This function is kept for backward compatibility
+            // but we now redirect instead of showing inline interface
             loginPage.style.display = 'none';
             adminInterface.style.display = 'block';
-            
-            // Show success message before redirecting
-            showSuccessMessage('Login successful! Redirecting to admin dashboard...');
-            
-            // In a real app, you would load the admin interface here
-            // For now, we'll reload the page to show the full admin interface
-            setTimeout(() => {
-                // This would normally load the full admin interface
-                // For simplicity, we'll just show an alert
-                alert('Admin login successful! Loading admin dashboard...');
-                // In production: window.location.href = 'admin-dashboard.html';
-            }, 1000);
         }
         
         async function handleLogin() {
             const email = loginEmail.value.trim();
             const password = loginPassword.value;
             
-            // Clear previous messages
             clearMessages();
             
-            // Validate input
             if (!email || !password) {
                 showErrorMessage('Please enter both email and password');
                 return;
             }
             
-            // Validate email format
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
                 showErrorMessage('Please enter a valid email address');
                 return;
             }
             
-            // Show loading state
             const originalText = loginBtn.innerHTML;
             loginBtn.innerHTML = '<div class="loading"></div>';
             loginBtn.disabled = true;
             
             try {
-                // Attempt login
                 const { data, error } = await sb.auth.signInWithPassword({
                     email,
                     password
                 });
                 
                 if (error) {
-                    // Handle specific error cases
                     if (error.message.includes('Invalid login credentials')) {
                         throw new Error('Invalid email or password');
                     } else if (error.message.includes('Email not confirmed')) {
@@ -474,7 +541,6 @@
                     }
                 }
                 
-                // Check if user is admin
                 const { data: profile, error: profileError } = await sb
                     .from('profiles')
                     .select('is_admin')
@@ -493,21 +559,24 @@
                 // Login successful
                 showSuccessMessage('Login successful! Redirecting...');
                 
-                // Redirect to admin interface
+                // Get the return URL
+                const returnUrl = getReturnUrl();
+                console.log("Login successful, redirecting to:", returnUrl);
+                
+                // Clear stored URLs
+                clearReturnUrls();
+                
+                // Redirect to return URL
                 setTimeout(() => {
-                    location.reload(); // Reload to show admin interface
+                    window.location.href = returnUrl;
                 }, 1500);
                 
             } catch (error) {
-                // Show error message
                 showErrorMessage(error.message || 'Login failed. Please try again.');
-                
-                // Clear password field for security
                 loginPassword.value = '';
                 loginPassword.focus();
                 
             } finally {
-                // Reset button state
                 loginBtn.innerHTML = originalText;
                 loginBtn.disabled = false;
             }
@@ -517,7 +586,6 @@
             loginError.textContent = message;
             loginError.classList.add('show');
             
-            // Auto-hide error after 5 seconds
             setTimeout(() => {
                 loginError.classList.remove('show');
             }, 5000);
@@ -527,7 +595,6 @@
             loginSuccess.textContent = message;
             loginSuccess.classList.add('show');
             
-            // Auto-hide success after 3 seconds
             setTimeout(() => {
                 loginSuccess.classList.remove('show');
             }, 3000);
@@ -540,24 +607,26 @@
             loginSuccess.textContent = '';
         }
         
-        // Make login function available globally
         window.handleLogin = handleLogin;
-        
-        // Setup login button
         loginBtn.addEventListener('click', handleLogin);
         
-        // Auto-capitalize first letter of email
         loginEmail.addEventListener('input', function() {
             if (this.value.length === 1) {
                 this.value = this.value.charAt(0).toLowerCase() + this.value.slice(1);
             }
         });
         
-        // Prevent form submission on Enter in email field
         loginEmail.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 loginPassword.focus();
+            }
+        });
+        
+        // Global Enter key handler
+        document.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter' && loginPage.style.display !== 'none') {
+                handleLogin();
             }
         });
     </script>
